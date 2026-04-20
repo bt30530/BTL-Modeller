@@ -9,64 +9,49 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #ffffff;
-      --bg-secondary: #f7f6f3;
-      --text: #1a1a18;
-      --text-secondary: #5f5e5a;
-      --border: rgba(0,0,0,0.12);
-      --border-mid: rgba(0,0,0,0.25);
+      --bg: #141413;
+      --bg-secondary: #1e1e1c;
+      --bg-card: #242422;
+      --text: #e8e7e0;
+      --text-secondary: #9a9890;
+      --text-muted: #5f5e5a;
+      --border: rgba(255,255,255,0.08);
+      --border-mid: rgba(255,255,255,0.16);
       --radius: 10px;
       --radius-sm: 6px;
       --teal: #1D9E75;
-      --teal-light: #E1F5EE;
-      --teal-dark: #0F6E56;
-      --amber-light: #FAEEDA;
-      --amber-dark: #854F0B;
-      --blue-light: #E6F1FB;
-      --blue-dark: #185FA5;
-      --red-light: #FCEBEB;
-      --red-dark: #A32D2D;
-      --gray-mid: #888780;
-      --shadow: 0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #1e1e1c;
-        --bg-secondary: #2a2a28;
-        --text: #f0efe8;
-        --text-secondary: #b4b2a9;
-        --border: rgba(255,255,255,0.1);
-        --border-mid: rgba(255,255,255,0.2);
-        --teal-light: #04342C;
-        --teal-dark: #9FE1CB;
-        --amber-light: #412402;
-        --amber-dark: #FAC775;
-        --blue-light: #042C53;
-        --blue-dark: #85B7EB;
-        --red-light: #501313;
-        --red-dark: #F09595;
-      }
+      --teal-light: #04342C;
+      --teal-bright: #5DCAA5;
+      --teal-dark: #9FE1CB;
+      --amber-light: #2d1a06;
+      --amber-dark: #FAC775;
+      --blue-light: #071e38;
+      --blue-dark: #85B7EB;
+      --red-light: #2a0d0d;
+      --red-dark: #F09595;
+      --accent: #1D9E75;
+      --shadow: 0 2px 8px rgba(0,0,0,0.4), 0 8px 32px rgba(0,0,0,0.3);
     }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      background: var(--bg-secondary);
+      background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       line-height: 1.6;
     }
 
     header {
-      background: var(--bg);
+      background: var(--bg-card);
       border-bottom: 0.5px solid var(--border);
-      padding: 1.25rem 2rem;
+      padding: 1.1rem 2rem;
       display: flex;
-      align-items: baseline;
+      align-items: center;
       gap: 1rem;
     }
-    header h1 { font-size: 18px; font-weight: 500; }
-    header p { font-size: 13px; color: var(--text-secondary); }
+    header h1 { font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
+    header h1 span { color: var(--teal-bright); }
+    header p { font-size: 13px; color: var(--text-muted); }
 
     .container {
       max-width: 1100px;
@@ -84,7 +69,7 @@
     }
 
     .card {
-      background: var(--bg);
+      background: var(--bg-card);
       border-radius: var(--radius);
       border: 0.5px solid var(--border);
       box-shadow: var(--shadow);
@@ -171,7 +156,7 @@
       transition: all 0.15s;
     }
     .tab:hover { background: var(--bg-secondary); }
-    .tab.active { background: var(--text); color: var(--bg); border-color: transparent; }
+    .tab.active { background: var(--teal); color: #fff; border-color: transparent; }
 
     .panel { display: none; }
     .panel.active { display: block; }
@@ -185,6 +170,7 @@
     .metric {
       background: var(--bg-secondary);
       border-radius: var(--radius-sm);
+      border: 0.5px solid var(--border);
       padding: 12px 14px;
     }
     .metric-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; line-height: 1.3; }
@@ -227,7 +213,7 @@
     }
     .breakdown-table td:not(:first-child) { text-align: right; }
     .breakdown-table tr:last-child td { border-bottom: none; }
-    .strong-row td { font-weight: 500; background: var(--bg-secondary); }
+    .strong-row td { font-weight: 500; background: rgba(255,255,255,0.04); }
     .strong-row td:first-child { padding-left: 6px; border-radius: 4px 0 0 4px; }
     .strong-row td:last-child { border-radius: 0 4px 4px 0; }
     .sub-head td { color: var(--text-secondary); font-size: 11px; padding-top: 10px; padding-bottom: 2px; font-style: italic; }
@@ -236,6 +222,7 @@
     .issue-card {
       background: var(--bg-secondary);
       border-radius: var(--radius-sm);
+      border: 0.5px solid var(--border);
       padding: 14px;
       margin-bottom: 10px;
     }
@@ -273,7 +260,7 @@
 <body>
 
 <header>
-  <h1>Beneficial ownership tax model</h1>
+  <h1>BTL <span>Tax</span> Modeller</h1>
   <p>UK income tax 2024/25 &mdash; for modelling purposes only.  Not financial or legal advice.</p>
 </header>
 
@@ -310,7 +297,7 @@
 
       <div class="control-group">
         <div class="control-header">
-          <span class="control-label">Ownership share &mdash; Ben (%)</span>
+          <span class="control-label">Ownership share — Husband (%)</span>
           <span class="control-value" id="lbl-share">90%</span>
         </div>
         <input type="range" id="sl-share" min="0" max="100" step="5" value="90" oninput="update()">
@@ -321,23 +308,23 @@
 
       <div class="control-group">
         <div class="control-header">
-          <span class="control-label">Ben employment/other income (£/yr)</span>
-          <span class="control-value" id="lbl-benIncome">£0</span>
+          <span class="control-label">Husband employment/other income (£/yr)</span>
+          <span class="control-value" id="lbl-husbandIncome">£0</span>
         </div>
-        <input type="range" id="sl-benIncome" min="0" max="150000" step="1000" value="0" oninput="update()">
+        <input type="range" id="sl-husbandIncome" min="0" max="150000" step="1000" value="0" oninput="update()">
       </div>
 
       <div class="control-group">
         <div class="control-header">
-          <span class="control-label">Ben savings interest (£/yr)</span>
-          <span class="control-value" id="lbl-savingsB">£1,000</span>
+          <span class="control-label">Husband savings interest (£/yr)</span>
+          <span class="control-value" id="lbl-savingsH">£1,000</span>
         </div>
-        <input type="range" id="sl-savingsB" min="0" max="15000" step="100" value="1000" oninput="update()">
+        <input type="range" id="sl-savingsH" min="0" max="15000" step="100" value="1000" oninput="update()">
       </div>
 
       <div class="control-group">
         <div class="control-header">
-          <span class="control-label">Jess salary (£/yr)</span>
+          <span class="control-label">Wife salary (£/yr)</span>
           <span class="control-value" id="lbl-salary">£130,000</span>
         </div>
         <input type="range" id="sl-salary" min="30000" max="300000" step="1000" value="130000" oninput="update()">
@@ -345,10 +332,10 @@
 
       <div class="control-group">
         <div class="control-header">
-          <span class="control-label">Jess savings/other income (£/yr)</span>
-          <span class="control-value" id="lbl-savingsJ">£0</span>
+          <span class="control-label">Wife savings/other income (£/yr)</span>
+          <span class="control-value" id="lbl-savingsW">£0</span>
         </div>
-        <input type="range" id="sl-savingsJ" min="0" max="15000" step="100" value="0" oninput="update()">
+        <input type="range" id="sl-savingsW" min="0" max="15000" step="100" value="0" oninput="update()">
       </div>
 
       <hr class="divider">
@@ -390,7 +377,7 @@
         <div id="flags-area"></div>
         <div id="legend-area" class="legend" style="margin-top:12px;"></div>
         <div class="chart-wrap">
-          <canvas id="chartResults" role="img" aria-label="Bar chart comparing income tax between Ben and Jess, or between baseline and selected scenario"></canvas>
+          <canvas id="chartResults" role="img" aria-label="Bar chart comparing income tax between Husband and Wife, or between baseline and selected scenario"></canvas>
         </div>
       </div>
 
@@ -476,42 +463,42 @@
     return primary + upper;
   }
 
-  function calcScenario(rent, costs, mintR, shareB, benEmployed, savingsB, salary, savingsJ) {
-    const shareJ = 1 - shareB;
+  function calcScenario(rent, costs, mintR, shareH, benEmployed, savingsH, salary, savingsW) {
+    const shareW = 1 - shareH;
     const netRent = rent - costs;
 
-    const rentB = netRent * shareB;
-    const rentJ = netRent * shareJ;
-    const mintB = mintR * shareB;
-    const mintJ = mintR * shareJ;
-    const creditB = mintB * 0.20;
-    const creditJ = mintJ * 0.20;
+    const rentH = netRent * shareH;
+    const rentW = netRent * shareW;
+    const mintH = mintR * shareH;
+    const mintW = mintR * shareW;
+    const creditB = mintH * 0.20;
+    const creditJ = mintW * 0.20;
 
-    // Ben: employment + rental + savings
-    const benEarned = benEmployed + rentB;
-    const benCalc = calcIncomeTax(benEarned, savingsB);
-    const benTaxFinal = Math.max(0, benCalc.tax - creditB);
+    // Husband: employment + rental + savings
+    const husbandEarned = benEmployed + rentH;
+    const husbandCalc = calcIncomeTax(husbandEarned, savingsH);
+    const benTaxFinal = Math.max(0, husbandCalc.tax - creditB);
 
-    // Jess: salary + rental + savings
-    const jessEarned = salary + rentJ;
-    const jessCalc = calcIncomeTax(jessEarned, savingsJ);
-    const jessTaxFinal = Math.max(0, jessCalc.tax - creditJ);
-    const jessNI = calcNI(salary);
+    // Wife: salary + rental + savings
+    const wifeEarned = salary + rentW;
+    const wifeCalc = calcIncomeTax(wifeEarned, savingsW);
+    const jessTaxFinal = Math.max(0, wifeCalc.tax - creditJ);
+    const wifeNI = calcNI(salary);
 
     return {
-      benTax: benTaxFinal,
-      jessTax: jessTaxFinal,
-      jessNI,
-      household: benTaxFinal + jessTaxFinal + jessNI,
+      husbandTax: benTaxFinal,
+      wifeTax: jessTaxFinal,
+      wifeNI,
+      household: benTaxFinal + jessTaxFinal + wifeNI,
       householdNoNI: benTaxFinal + jessTaxFinal,
-      benEarned, jessEarned,
-      rentB, rentJ, netRent,
-      benCredit: creditB, jessCredit: creditJ,
-      benPA: benCalc.pa, jessPA: jessCalc.pa,
-      benMarginal: benCalc.marginalRate, jessMarginal: jessCalc.marginalRate,
-      benTaxBeforeCredit: benCalc.tax,
-      jessTaxBeforeCredit: jessCalc.tax,
-      mintB, mintJ
+      husbandEarned, wifeEarned,
+      rentH, rentW, netRent,
+      husbandCredit: creditB, wifeCredit: creditJ,
+      husbandPA: husbandCalc.pa, wifePA: wifeCalc.pa,
+      husbandMarginal: husbandCalc.marginalRate, wifeMarginal: wifeCalc.marginalRate,
+      husbandTaxBeforeCredit: husbandCalc.tax,
+      wifeTaxBeforeCredit: wifeCalc.tax,
+      mintH, mintW
     };
   }
 
@@ -539,22 +526,22 @@
     const rent       = +document.getElementById('sl-rent').value;
     const costs      = +document.getElementById('sl-costs').value;
     let   mintR      = +document.getElementById('sl-mintR').value;
-    const shareB     = +document.getElementById('sl-share').value / 100;
-    const benIncome  = +document.getElementById('sl-benIncome').value;
-    const savingsB   = +document.getElementById('sl-savingsB').value;
+    const shareH     = +document.getElementById('sl-share').value / 100;
+    const husbandIncome  = +document.getElementById('sl-husbandIncome').value;
+    const savingsH   = +document.getElementById('sl-savingsH').value;
     const salary     = +document.getElementById('sl-salary').value;
-    const savingsJ   = +document.getElementById('sl-savingsJ').value;
+    const savingsW   = +document.getElementById('sl-savingsW').value;
     const rebalRate  = +document.getElementById('sl-rebalRate').value;
 
     // Label updates
     document.getElementById('lbl-rent').textContent       = fmt(rent);
     document.getElementById('lbl-costs').textContent      = fmt(costs);
     document.getElementById('lbl-mintR').textContent      = fmt(mintR);
-    document.getElementById('lbl-share').textContent      = Math.round(shareB * 100) + '%';
-    document.getElementById('lbl-benIncome').textContent  = fmt(benIncome);
-    document.getElementById('lbl-savingsB').textContent   = fmt(savingsB);
+    document.getElementById('lbl-share').textContent      = Math.round(shareH * 100) + '%';
+    document.getElementById('lbl-husbandIncome').textContent  = fmt(husbandIncome);
+    document.getElementById('lbl-savingsH').textContent   = fmt(savingsH);
     document.getElementById('lbl-salary').textContent     = fmt(salary);
-    document.getElementById('lbl-savingsJ').textContent   = fmt(savingsJ);
+    document.getElementById('lbl-savingsW').textContent   = fmt(savingsW);
     document.getElementById('lbl-rebalRate').textContent  = rebalRate.toFixed(1) + '%';
 
     // Rebalancing adjustment
@@ -564,8 +551,8 @@
       mintR = mintR + rebalInterestAdd;
     }
 
-    const base     = calcScenario(rent, costs, mintR, 0.5,    benIncome, savingsB, salary, savingsJ);
-    const scenario = calcScenario(rent, costs, mintR, shareB, benIncome, savingsB, salary, savingsJ);
+    const base     = calcScenario(rent, costs, mintR, 0.5,    husbandIncome, savingsH, salary, savingsW);
+    const scenario = calcScenario(rent, costs, mintR, shareH, husbandIncome, savingsH, salary, savingsW);
     const saving   = base.household - scenario.household;
 
     // ── Metrics ──
@@ -576,12 +563,12 @@
         <div class="metric-val ${saving >= 0 ? 'pos' : 'neg'}">${saving >= 0 ? '+' : ''}${fmt(saving)}</div>
       </div>
       <div class="metric">
-        <div class="metric-label">Ben income tax</div>
-        <div class="metric-val">${fmt(scenario.benTax)}</div>
+        <div class="metric-label">Husband income tax</div>
+        <div class="metric-val">${fmt(scenario.husbandTax)}</div>
       </div>
       <div class="metric">
-        <div class="metric-label">Jess income tax</div>
-        <div class="metric-val">${fmt(scenario.jessTax)}</div>
+        <div class="metric-label">Wife income tax</div>
+        <div class="metric-val">${fmt(scenario.wifeTax)}</div>
       </div>
       <div class="metric">
         <div class="metric-label">Household total (inc NI)</div>
@@ -591,31 +578,31 @@
 
     // ── Flags ──
     let flags = '';
-    const jessTotal = salary + scenario.rentJ + savingsJ;
-    if (jessTotal > 100000) {
-      const paLost = Math.min(PA_BASE, Math.floor((jessTotal - 100000) / 2));
-      flags += `<div class="flag warn"><strong>Personal allowance trap (Jess):</strong>  Total income of ${fmt(jessTotal)} — Jess loses £${Math.round(paLost).toLocaleString()} of personal allowance, creating an effective 60% marginal rate on income between £100k–£125,140.</div>`;
+    const wifeTotal = salary + scenario.rentW + savingsW;
+    if (wifeTotal > 100000) {
+      const paLost = Math.min(PA_BASE, Math.floor((wifeTotal - 100000) / 2));
+      flags += `<div class="flag warn"><strong>Personal allowance trap (Wife):</strong>  Total income of ${fmt(wifeTotal)} — Wife loses £${Math.round(paLost).toLocaleString()} of personal allowance, creating an effective 60% marginal rate on income between £100k–£125,140.</div>`;
     }
-    if (scenario.benTax < 100) {
-      flags += `<div class="flag good"><strong>Ben has negligible income tax</strong> at this split — rental share absorbed within personal allowance and basic rate band.</div>`;
+    if (scenario.husbandTax < 100) {
+      flags += `<div class="flag good"><strong>Husband has negligible income tax</strong> at this split — rental share absorbed within personal allowance and basic rate band.</div>`;
     }
     if (toggleState.rebal) {
       flags += `<div class="flag info"><strong>Rebalancing adds ${fmt(rebalInterestAdd)}/yr interest</strong> to the rental — increases the Section 24 credit pool.  Net cash impact depends on reduction in residential interest.</div>`;
     }
-    const benTotal = benIncome + scenario.rentB + savingsB;
+    const benTotal = husbandIncome + scenario.rentH + savingsH;
     if (benTotal > 100000) {
-      flags += `<div class="flag warn"><strong>Ben now approaches the £100k trap</strong> at this split — consider whether this undermines the benefit.</div>`;
+      flags += `<div class="flag warn"><strong>Husband now approaches the £100k trap</strong> at this split — consider whether this undermines the benefit.</div>`;
     }
     document.getElementById('flags-area').innerHTML = flags;
 
     // ── Chart ──
     let labels, datasets, stacked;
-    const dark = isDark();
-    const textColor = dark ? '#b4b2a9' : '#888780';
-    const gridColor = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+    const dark = true;
+    const textColor = '#6b6a65';
+    const gridColor = 'rgba(255,255,255,0.06)';
 
     if (toggleState.compare) {
-      labels = ['50/50 baseline', `${Math.round(shareB*100)}/${Math.round((1-shareB)*100)} split`];
+      labels = ['50/50 baseline', `${Math.round(shareH*100)}/${Math.round((1-shareH)*100)} split`];
       datasets = [{
         label: 'Total household tax + NI',
         data: [Math.round(base.household), Math.round(scenario.household)],
@@ -625,18 +612,18 @@
       stacked = false;
       document.getElementById('legend-area').innerHTML = `
         <div class="legend-item"><span class="legend-swatch" style="background:#888780;"></span>50/50 baseline</div>
-        <div class="legend-item"><span class="legend-swatch" style="background:#1D9E75;"></span>${Math.round(shareB*100)}/${Math.round((1-shareB)*100)} split</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:#1D9E75;"></span>${Math.round(shareH*100)}/${Math.round((1-shareH)*100)} split</div>
       `;
     } else {
-      labels = ['Ben', 'Jess'];
+      labels = ['Husband', 'Wife'];
       datasets = [
-        { label: 'Income tax', data: [Math.round(scenario.benTax), Math.round(scenario.jessTax)], backgroundColor: '#378ADD', borderRadius: 3 },
-        { label: "NI (Jess salary)", data: [0, Math.round(scenario.jessNI)], backgroundColor: '#B4B2A9', borderRadius: 3 }
+        { label: 'Income tax', data: [Math.round(scenario.husbandTax), Math.round(scenario.wifeTax)], backgroundColor: '#378ADD', borderRadius: 3 },
+        { label: "NI (Wife salary)", data: [0, Math.round(scenario.wifeNI)], backgroundColor: '#B4B2A9', borderRadius: 3 }
       ];
       stacked = true;
       document.getElementById('legend-area').innerHTML = `
         <div class="legend-item"><span class="legend-swatch" style="background:#378ADD;"></span>Income tax</div>
-        <div class="legend-item"><span class="legend-swatch" style="background:#B4B2A9;"></span>NI (Jess salary)</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:#B4B2A9;"></span>NI (Wife salary)</div>
       `;
     }
 
@@ -679,25 +666,25 @@
     };
     document.getElementById('breakdown-content').innerHTML = `
       <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
-        Scenario: Ben ${Math.round(shareB*100)}% / Jess ${Math.round((1-shareB)*100)}%.
+        Scenario: Husband ${Math.round(shareH*100)}% / Wife ${Math.round((1-shareH)*100)}%.
         ${toggleState.rebal ? `Rental interest includes ${fmt(rebalInterestAdd)} rebalancing addition.` : ''}
       </p>
       <table class="breakdown-table">
         <thead>
-          <tr><th>Item</th><th>Ben</th><th>Jess</th></tr>
+          <tr><th>Item</th><th>Husband</th><th>Wife</th></tr>
         </thead>
         <tbody>
-          ${mkRow('Employment / other income', benIncome || null, salary)}
-          ${mkRow('Rental net profit share', scenario.rentB, scenario.rentJ)}
-          ${mkRow('Savings interest', savingsB, savingsJ)}
-          ${mkRow('Total gross income', benIncome + scenario.rentB + savingsB, salary + scenario.rentJ + savingsJ, true)}
+          ${mkRow('Employment / other income', husbandIncome || null, salary)}
+          ${mkRow('Rental net profit share', scenario.rentH, scenario.rentW)}
+          ${mkRow('Savings interest', savingsH, savingsW)}
+          ${mkRow('Total gross income', husbandIncome + scenario.rentH + savingsH, salary + scenario.rentW + savingsW, true)}
           ${mkRow('Income tax computation', null, null, false, true)}
-          ${mkRow('Personal allowance', scenario.benPA, scenario.jessPA)}
-          ${mkRow('Tax before Sec.24 credit', scenario.benTaxBeforeCredit, scenario.jessTaxBeforeCredit)}
-          ${mkRow('Sec.24 credit (20% of interest share)', -scenario.benCredit, -scenario.jessCredit)}
-          ${mkRow('Income tax payable', scenario.benTax, scenario.jessTax, true)}
-          ${mkRow('National Insurance (salary)', 0, scenario.jessNI)}
-          ${mkRow('Total tax burden', scenario.benTax, scenario.jessTax + scenario.jessNI, true)}
+          ${mkRow('Personal allowance', scenario.husbandPA, scenario.wifePA)}
+          ${mkRow('Tax before Sec.24 credit', scenario.husbandTaxBeforeCredit, scenario.wifeTaxBeforeCredit)}
+          ${mkRow('Sec.24 credit (20% of interest share)', -scenario.husbandCredit, -scenario.wifeCredit)}
+          ${mkRow('Income tax payable', scenario.husbandTax, scenario.wifeTax, true)}
+          ${mkRow('National Insurance (salary)', 0, scenario.wifeNI)}
+          ${mkRow('Total tax burden', scenario.husbandTax, scenario.wifeTax + scenario.wifeNI, true)}
         </tbody>
       </table>
       <p style="margin-top:10px; font-size:12px; color:var(--text-secondary);">
@@ -706,12 +693,12 @@
     `;
 
     // ── Issues ──
-    const jessGross = fmt(salary + scenario.rentJ + savingsJ);
+    const wifeGross = fmt(salary + scenario.rentW + savingsW);
     document.getElementById('issues-content').innerHTML = `
       <div class="issue-card">
         <span class="issue-severity sev-high">High priority</span>
-        <div class="issue-title">Personal allowance trap — Jess</div>
-        <div class="issue-body">Jess's total income of ${jessGross} places her in the taper zone (£100k–£125,140) where the effective marginal rate is 60%.  Every pound of rental income in this band that flows to Jess is taxed at this rate.  Shifting the maximum defensible share to Ben directly addresses this.  Consider also pension contributions to reduce Jess's adjusted net income.</div>
+        <div class="issue-title">Personal allowance trap — Wife</div>
+        <div class="issue-body">Wife's total income of ${wifeGross} places her in the taper zone (£100k–£125,140) where the effective marginal rate is 60%.  Every pound of rental income in this band that flows to Wife is taxed at this rate.  Shifting the maximum defensible share to Husband directly addresses this.  Consider also pension contributions to reduce Wife's adjusted net income.</div>
       </div>
       <div class="issue-card">
         <span class="issue-severity sev-high">High priority</span>
@@ -726,7 +713,7 @@
       <div class="issue-card">
         <span class="issue-severity sev-med">Review required</span>
         <div class="issue-title">Section 24 — mortgage interest restriction</div>
-        <div class="issue-body">Since April 2020, mortgage interest is not deductible as a rental expense.  Each owner receives a 20% tax credit on their share of interest.  For a nil/basic-rate taxpayer like Ben, this credit offsets tax at the same rate as it is given — effectively neutral.  For Jess as a higher-rate taxpayer, interest relief is restricted to 20% rather than 40%.  Shifting ownership and debt to Ben maximises the relief's effectiveness.</div>
+        <div class="issue-body">Since April 2020, mortgage interest is not deductible as a rental expense.  Each owner receives a 20% tax credit on their share of interest.  For a nil/basic-rate taxpayer like Husband, this credit offsets tax at the same rate as it is given — effectively neutral.  For Wife as a higher-rate taxpayer, interest relief is restricted to 20% rather than 40%.  Shifting ownership and debt to Husband maximises the relief's effectiveness.</div>
       </div>
       <div class="issue-card">
         <span class="issue-severity sev-med">Review required</span>
@@ -735,13 +722,13 @@
       </div>
       <div class="issue-card">
         <span class="issue-severity sev-info">Action needed</span>
-        <div class="issue-title">Self-assessment — Ben</div>
-        <div class="issue-body">Once Ben's share of rental income exceeds £1,000, he must register for self-assessment and submit annual tax returns.  At a 90% split his rental profit share is substantial.  Registration should be in place for the tax year in which the deed of trust takes effect — HMRC's deadline for registering is 5 October following the end of the relevant tax year.</div>
+        <div class="issue-title">Self-assessment — Husband</div>
+        <div class="issue-body">Once Husband's share of rental income exceeds £1,000, he must register for self-assessment and submit annual tax returns.  At a 90% split his rental profit share is substantial.  Registration should be in place for the tax year in which the deed of trust takes effect — HMRC's deadline for registering is 5 October following the end of the relevant tax year.</div>
       </div>
       <div class="issue-card">
         <span class="issue-severity sev-info">Worth noting</span>
         <div class="issue-title">Capital gains tax on eventual sale</div>
-        <div class="issue-body">Beneficial ownership proportions also determine how any future capital gain on the rental property is split between you and Jess.  Ben's lower income level may mean a lower CGT rate applies to his share (18% vs 24% for higher-rate payers).  The current split chosen now will set the CGT position at sale — worth factoring in if a sale is contemplated in the medium term.</div>
+        <div class="issue-body">Beneficial ownership proportions also determine how any future capital gain on the rental property is split between the two of you.  The lower-income spouse's share may attract a lower CGT rate (18% vs 24% for higher-rate payers).  The current split chosen now will set the CGT position at sale — worth factoring in if a sale is contemplated in the medium term.</div>
       </div>
     `;
   }
