@@ -261,7 +261,7 @@
 
 <header>
   <h1>BTL <span>Tax</span> Modeller</h1>
-  <p>UK income tax 2024/25 &mdash; for modelling purposes only.  Not financial or legal advice.</p>
+  <p>UK income tax 2026/27 &mdash; for modelling purposes only.  Not financial or legal advice.</p>
 </header>
 
 <div class="container">
@@ -395,7 +395,7 @@
 </div>
 
 <footer>
-  For modelling purposes only.  This tool does not constitute financial, tax, or legal advice.  Consult a solicitor and tax adviser before making changes to beneficial ownership.  UK tax figures based on 2024/25 rates.
+  For modelling purposes only.  This tool does not constitute financial, tax, or legal advice.  Consult a solicitor and tax adviser before making changes to beneficial ownership.  UK tax figures based on 2026/27 rates.
 </footer>
 
 <script>
@@ -410,10 +410,6 @@
   // ── Helpers ────────────────────────────────────────────────────────────────
   function fmt(n) {
     return '£' + Math.round(n).toLocaleString('en-GB');
-  }
-
-  function isDark() {
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
 
   // ── Tax calculation ────────────────────────────────────────────────────────
@@ -597,7 +593,6 @@
 
     // ── Chart ──
     let labels, datasets, stacked;
-    const dark = true;
     const textColor = '#6b6a65';
     const gridColor = 'rgba(255,255,255,0.06)';
 
