@@ -1,869 +1,1765 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Beneficial Ownership Tax Model</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTL Modeller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg: #141413;
-      --bg-secondary: #1e1e1c;
-      --bg-card: #242422;
-      --text: #e8e7e0;
-      --text-secondary: #9a9890;
-      --text-muted: #5f5e5a;
-      --border: rgba(255,255,255,0.08);
-      --border-mid: rgba(255,255,255,0.16);
-      --radius: 10px;
-      --radius-sm: 6px;
-      --teal: #1D9E75;
-      --teal-light: #04342C;
-      --teal-bright: #5DCAA5;
-      --teal-dark: #9FE1CB;
-      --amber-light: #2d1a06;
-      --amber-dark: #FAC775;
-      --blue-light: #071e38;
-      --blue-dark: #85B7EB;
-      --red-light: #2a0d0d;
-      --red-dark: #F09595;
-      --accent: #1D9E75;
-      --shadow: 0 2px 8px rgba(0,0,0,0.4), 0 8px 32px rgba(0,0,0,0.3);
-    }
+:root {
+  --paper: #f6f3ec;
+  --paper-2: #efeadf;
+  --card: #fbf9f3;
+  --ink: #1a1815;
+  --ink-2: #4a463f;
+  --ink-3: #7a746a;
+  --ink-4: #b5ad9e;
+  --rule: #d9d1bf;
+  --rule-soft: #e6dfcd;
+  --accent: #2d5d48;   /* deep forest */
+  --accent-2: #c08a3e; /* aged gold */
+  --accent-3: #8a3a2a; /* oxblood (negative / warning) */
+  --good-bg: #e8efe9;
+  --warn-bg: #f4ead5;
+  --bad-bg:  #f1e1db;
+  --info-bg: #e5e8ec;
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      line-height: 1.6;
-    }
+  --sans: 'IBM Plex Sans', -apple-system, system-ui, sans-serif;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
 
-    header {
-      background: var(--bg-card);
-      border-bottom: 0.5px solid var(--border);
-      padding: 1.1rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    header h1 { font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
-    header h1 span { color: var(--teal-bright); }
-    header p { font-size: 13px; color: var(--text-muted); }
+html, body { background: var(--paper); color: var(--ink); font-family: var(--sans); }
+body {
+  font-size: 14px;
+  line-height: 1.55;
+  min-height: 100vh;
+  font-feature-settings: "ss01", "cv11";
+}
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 1.5rem 1.5rem;
-      display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 1.25rem;
-      align-items: start;
-    }
+/* ─── Masthead ─────────────────────────────────────────────────── */
+.masthead {
+  border-bottom: 1px solid var(--ink);
+  padding: 22px 40px 18px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 20px;
+  background: var(--paper);
+}
+.mast-left { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.mast-left b { color: var(--ink); font-weight: 500; }
+.mast-title {
+  font-family: var(--serif);
+  font-size: 44px;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  text-align: center;
+  white-space: nowrap;
+}
+.mast-title em { font-style: italic; color: var(--accent); font-weight: 400; }
+.mast-right { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); text-align: right; }
 
-    @media (max-width: 820px) {
-      .container { grid-template-columns: 1fr; }
-      header { flex-direction: column; gap: 4px; }
-    }
+.sub-bar {
+  border-bottom: 1px solid var(--rule);
+  padding: 8px 40px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  background: var(--paper);
+}
 
-    .left-col { display: flex; flex-direction: column; gap: 1rem; }
+/* ─── 3-column layout ──────────────────────────────────────────── */
+.shell {
+  display: grid;
+  grid-template-columns: 320px 320px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 120px);
+}
+.col {
+  border-right: 1px solid var(--rule);
+  padding: 24px 22px;
+  overflow-y: auto;
+}
+.col:last-child { border-right: none; }
+.col-people { background: var(--paper); }
+.col-prop   { background: var(--paper); }
+.col-results{ background: var(--card); padding: 28px 34px; }
 
-    .card {
-      background: var(--bg-card);
-      border-radius: var(--radius);
-      border: 0.5px solid var(--border);
-      box-shadow: var(--shadow);
-      padding: 1.25rem;
-    }
+@media (max-width: 1100px) {
+  .shell { grid-template-columns: 1fr; }
+  .col { border-right: none; border-bottom: 1px solid var(--rule); }
+}
 
-    .section-title {
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 12px;
-    }
+/* ─── Column typography ────────────────────────────────────────── */
+.col-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.col-eyebrow .num { color: var(--accent); }
+.col-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--ink);
+}
+.col-title em { font-style: italic; color: var(--ink-3); font-size: 18px; font-weight: 400; }
 
-    .control-group { margin-bottom: 14px; }
-    .control-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
-    .control-label { font-size: 13px; color: var(--text-secondary); }
-    .control-value { font-size: 14px; font-weight: 500; color: var(--text); }
+.group {
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px dashed var(--rule);
+}
+.group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
 
-    input[type=range] {
-      width: 100%;
-      height: 4px;
-      -webkit-appearance: none;
-      appearance: none;
-      background: var(--border-mid);
-      border-radius: 2px;
-      outline: none;
-      cursor: pointer;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      background: var(--teal);
-      cursor: pointer;
-    }
-    input[type=range]::-moz-range-thumb {
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      background: var(--teal);
-      border: none;
-      cursor: pointer;
-    }
+.group-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.group-label .hint { color: var(--ink-4); font-size: 9px; letter-spacing: 0.04em; }
 
-    .rate-row { display: flex; align-items: center; gap: 10px; }
-    .rate-row input[type=range] { flex: 1; }
-    .rate-num-input {
-      width: 62px;
-      background: var(--bg-secondary);
-      border: 0.5px solid var(--border-mid);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 13px;
-      padding: 4px 6px;
-      text-align: right;
-      outline: none;
-      -moz-appearance: textfield;
-    }
-    .rate-num-input::-webkit-inner-spin-button,
-    .rate-num-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-    .rate-num-input:focus { border-color: var(--teal); }
+/* ─── Field controls ───────────────────────────────────────────── */
+.field { margin-bottom: 12px; }
+.field-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 3px;
+}
+.field-label { font-size: 12.5px; color: var(--ink-2); }
+.field-value {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
 
-    .divider { border: none; border-top: 0.5px solid var(--border); margin: 16px 0; }
+input[type="range"] {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2px;
+  background: var(--rule);
+  border-radius: 0;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); background: var(--accent); border-color: var(--accent); }
+input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  cursor: pointer;
+}
 
-    .toggle-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
-    .toggle {
-      width: 36px; height: 20px;
-      background: var(--border-mid);
-      border-radius: 10px;
-      cursor: pointer;
-      border: none;
-      position: relative;
-      flex-shrink: 0;
-      margin-top: 1px;
-      transition: background 0.2s;
-    }
-    .toggle.on { background: var(--teal); }
-    .toggle::after {
-      content: '';
-      position: absolute;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: white;
-      top: 3px; left: 3px;
-      transition: left 0.2s;
-    }
-    .toggle.on::after { left: 19px; }
-    .toggle-label { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
+.inline-num {
+  display: flex; align-items: center; gap: 8px;
+}
+.inline-num input[type="range"] { flex: 1; }
+.num-input {
+  width: 60px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 2px 0;
+  text-align: right;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.num-input::-webkit-inner-spin-button,
+.num-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.num-input:focus { border-bottom-color: var(--accent); }
 
-    /* Results side */
-    .tabs { display: flex; gap: 4px; margin-bottom: 1rem; flex-wrap: wrap; }
-    .tab {
-      font-size: 13px;
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 0.5px solid var(--border-mid);
-      background: transparent;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s;
-    }
-    .tab:hover { background: var(--bg-secondary); }
-    .tab.active { background: var(--teal); color: #fff; border-color: transparent; }
+/* ─── Split slider — couple visual ─────────────────────────────── */
+.split-viz {
+  margin: 8px 0 6px;
+}
+.split-bar {
+  position: relative;
+  height: 28px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  display: flex;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+}
+.split-bar > div {
+  display: flex; align-items: center; padding: 0 10px;
+  transition: flex 0.15s;
+}
+.split-bar .h-side { background: var(--accent); color: #f6f3ec; justify-content: flex-start; }
+.split-bar .w-side { background: var(--accent-2); color: #1a1815; justify-content: flex-end; }
 
-    .panel { display: none; }
-    .panel.active { display: block; }
+/* ─── Toggles ──────────────────────────────────────────────────── */
+.toggle-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; cursor: pointer; }
+.toggle {
+  width: 30px; height: 18px;
+  background: var(--rule);
+  border-radius: 9px;
+  border: none;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px; left: 3px;
+  transition: left 0.2s;
+}
+.toggle.on::after { left: 15px; }
+.toggle-text { font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
 
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      margin-bottom: 1.25rem;
-    }
-    .metric {
-      background: var(--bg-secondary);
-      border-radius: var(--radius-sm);
-      border: 0.5px solid var(--border);
-      padding: 12px 14px;
-    }
-    .metric-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; line-height: 1.3; }
-    .metric-val { font-size: 22px; font-weight: 500; }
-    .metric-val.pos { color: var(--teal); }
-    .metric-val.neg { color: #E24B4A; }
-    .metric-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+/* ─── Results column ───────────────────────────────────────────── */
+.results-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--ink);
+  margin-bottom: 28px;
+}
+.hero-cell {
+  padding: 20px 22px;
+  border-right: 1px solid var(--rule);
+}
+.hero-cell:last-child { border-right: none; }
+.hero-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 10px;
+}
+.hero-val {
+  font-family: var(--serif);
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.hero-val.pos { color: var(--accent); }
+.hero-val.neg { color: var(--accent-3); }
+.hero-sub {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
 
-    .metrics-section-label {
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      margin-top: 4px;
-    }
+/* ─── Tabs ─────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--ink);
+  margin-bottom: 20px;
+}
+.tab {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.tab:hover { color: var(--ink); }
+.tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
 
-    .flag {
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      padding: 10px 14px;
-      margin-bottom: 8px;
-      line-height: 1.5;
-    }
-    .flag.good { background: var(--teal-light); color: var(--teal-dark); }
-    .flag.warn { background: var(--amber-light); color: var(--amber-dark); }
-    .flag.info { background: var(--blue-light); color: var(--blue-dark); }
+.panel { display: none; }
+.panel.active { display: block; }
 
-    .chart-wrap { position: relative; width: 100%; height: 240px; margin-top: 1rem; }
+/* ─── Breakdown table ──────────────────────────────────────────── */
+.bdn {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  border-collapse: collapse;
+}
+.bdn th {
+  text-align: left;
+  font-weight: 500;
+  padding: 8px 10px 10px 0;
+  border-bottom: 1px solid var(--ink);
+  color: var(--ink-3);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.bdn th:not(:first-child) { text-align: right; }
+.bdn td {
+  padding: 6px 10px 6px 0;
+  border-bottom: 1px solid var(--rule-soft);
+  vertical-align: top;
+}
+.bdn td:not(:first-child) { text-align: right; }
+.bdn tr.strong td { font-weight: 500; color: var(--ink); border-bottom: 1px solid var(--ink); }
+.bdn tr.subhead td {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding-top: 18px;
+  padding-bottom: 4px;
+  border-bottom: none;
+}
+.bdn tr.muted td { color: var(--ink-3); }
+.bdn td.neg { color: var(--accent-3); }
+.bdn td.pos { color: var(--accent); }
 
-    /* Breakdown table */
-    .breakdown-table {
-      width: 100%;
-      font-size: 13px;
-      border-collapse: collapse;
-    }
-    .breakdown-table th {
-      text-align: left;
-      color: var(--text-secondary);
-      font-weight: 500;
-      padding: 4px 8px 10px 0;
-      border-bottom: 0.5px solid var(--border-mid);
-      font-size: 12px;
-    }
-    .breakdown-table th:not(:first-child) { text-align: right; }
-    .breakdown-table td {
-      padding: 7px 8px 7px 0;
-      border-bottom: 0.5px solid var(--border);
-      vertical-align: top;
-    }
-    .breakdown-table td:not(:first-child) { text-align: right; }
-    .breakdown-table tr:last-child td { border-bottom: none; }
-    .strong-row td { font-weight: 500; background: rgba(255,255,255,0.04); }
-    .strong-row td:first-child { padding-left: 6px; border-radius: 4px 0 0 4px; }
-    .strong-row td:last-child { border-radius: 0 4px 4px 0; }
-    .sub-head td { color: var(--text-secondary); font-size: 11px; padding-top: 10px; padding-bottom: 2px; font-style: italic; }
+/* ─── Flags ────────────────────────────────────────────────────── */
+.flags { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.flag {
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  border-left: 2px solid;
+}
+.flag b { font-weight: 500; }
+.flag.good { background: var(--good-bg); border-color: var(--accent); }
+.flag.warn { background: var(--warn-bg); border-color: var(--accent-2); }
+.flag.bad  { background: var(--bad-bg);  border-color: var(--accent-3); }
+.flag.info { background: var(--info-bg); border-color: var(--ink-3); }
 
-    /* Issues */
-    .issue-card {
-      background: var(--bg-secondary);
-      border-radius: var(--radius-sm);
-      border: 0.5px solid var(--border);
-      padding: 14px;
-      margin-bottom: 10px;
-    }
-    .issue-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
-    .issue-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
-    .issue-severity {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 500;
-      padding: 2px 8px;
-      border-radius: 10px;
-      margin-bottom: 8px;
-    }
-    .sev-high { background: var(--red-light); color: var(--red-dark); }
-    .sev-med { background: var(--amber-light); color: var(--amber-dark); }
-    .sev-info { background: var(--blue-light); color: var(--blue-dark); }
+/* ─── Issue cards ──────────────────────────────────────────────── */
+.issue {
+  padding: 18px 20px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  margin-bottom: 12px;
+}
+.issue-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.issue-title { font-family: var(--serif); font-size: 19px; line-height: 1.2; }
+.issue-sev {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border: 1px solid;
+}
+.sev-high { color: var(--accent-3); border-color: var(--accent-3); }
+.sev-med { color: var(--accent-2); border-color: var(--accent-2); }
+.sev-info { color: var(--ink-3); border-color: var(--ink-3); }
+.issue-body { font-size: 13px; color: var(--ink-2); line-height: 1.6; }
 
-    footer {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-secondary);
-      padding: 2rem;
-      border-top: 0.5px solid var(--border);
-      margin-top: 1rem;
-    }
+/* ─── Chart container ──────────────────────────────────────────── */
+.chart-card {
+  border: 1px solid var(--rule);
+  padding: 20px;
+  margin-bottom: 24px;
+  background: var(--paper);
+}
+.chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.chart-title {
+  font-family: var(--serif);
+  font-size: 20px;
+  line-height: 1;
+}
+.chart-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.chart-wrap { position: relative; width: 100%; height: 240px; }
+.chart-wrap.tall { height: 300px; }
 
-    .rebal-indent { margin-left: 46px; margin-top: 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.05em; color: var(--ink-3); text-transform: uppercase; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-swatch { width: 10px; height: 10px; flex-shrink: 0; }
 
-    /* Legend */
-    .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 8px; font-size: 12px; color: var(--text-secondary); }
-    .legend-item { display: flex; align-items: center; gap: 5px; }
-    .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-  </style>
+/* ─── Section headers in results ───────────────────────────────── */
+.section-hdr {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 10px 0 16px;
+}
+.section-hdr .kicker {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.section-hdr h2 {
+  font-family: var(--serif);
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+.section-hdr .rule {
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+/* ─── Optimiser callout ────────────────────────────────────────── */
+.opt-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 22px;
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.opt-cell { border-right: 1px dashed var(--rule); padding-right: 20px; }
+.opt-cell:last-child { border-right: none; padding-right: 0; }
+.opt-lede {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+.opt-val {
+  font-family: var(--serif);
+  font-size: 32px;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.opt-val.pos { color: var(--accent); }
+.opt-desc { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+
+/* ─── Tweaks panel ─────────────────────────────────────────────── */
+#tweaks-panel {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  width: 300px;
+  background: var(--card);
+  border: 1px solid var(--ink);
+  padding: 18px 18px 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  z-index: 500;
+  display: none;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+#tweaks-panel.open { display: block; }
+.tweaks-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ink);
+}
+.tweaks-head h3 { font-family: var(--serif); font-size: 20px; line-height: 1; font-weight: 400; }
+.tweaks-head .close {
+  background: none; border: none; cursor: pointer; font-family: var(--mono); font-size: 14px; color: var(--ink-3);
+}
+
+.footer-note {
+  padding: 28px 40px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-top: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.anno {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-3);
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+.pill-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid var(--rule);
+  color: var(--ink-3);
+  background: transparent;
+  cursor: pointer;
+}
+.pill.active { border-color: var(--ink); color: var(--ink); background: var(--paper-2); }
+.pill:hover { color: var(--ink); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* scenario label above split */
+.split-names {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 4px;
+}
+.split-names .h { color: var(--accent); }
+.split-names .w { color: var(--accent-2); }
+
+</style>
 </head>
 <body>
 
-<header>
-  <h1>BTL <span>Tax</span> Modeller</h1>
-  <p>UK income tax 2026/27 &mdash; for modelling purposes only.  Not financial or legal advice.</p>
-</header>
+<div class="masthead">
+  <div class="mast-left"><b>The Household Ledger</b> · Vol. I · No. 1</div>
+  <div class="mast-title">Buy&#8209;to&#8209;Let <em>Modeller</em></div>
+  <div class="mast-right" id="mast-date">—</div>
+</div>
+<div class="sub-bar">
+  <div>UK Income Tax · <span id="sb-year">2026/27</span> · For modelling only — not advice · <a href="#" id="reset-link" style="color:inherit; text-decoration:underline dotted; cursor:pointer;" title="Clear saved slider state and reload">Reset</a></div>
+  <div id="sb-summary">—</div>
+</div>
 
-<div class="container">
+<div class="shell">
 
-  <!-- LEFT: INPUTS -->
-  <div class="left-col">
+  <!-- COLUMN 1 — PEOPLE -->
+  <div class="col col-people">
+    <div class="col-eyebrow"><span class="num">I</span><span>The Couple</span></div>
+    <h2 class="col-title">People <em>& income</em></h2>
 
-    <!-- PROPERTY BLOCK -->
-    <div class="card">
-      <div class="section-title">Property</div>
+    <!-- Husband -->
+    <div class="group">
+      <div class="group-label">Husband <span class="hint">Primary / basic rate</span></div>
 
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Property value</span>
-          <span class="control-value" id="lbl-propValue">£1,500,000</span>
-        </div>
-        <input type="range" id="sl-propValue" min="100000" max="5000000" step="50000" value="1500000" oninput="update()">
+      <div class="field">
+        <div class="field-head"><span class="field-label">Employment / other income</span><span class="field-value" id="lbl-husbandIncome">£0</span></div>
+        <input type="range" id="sl-husbandIncome" min="0" max="150000" step="1000" value="0">
       </div>
 
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Mortgage balance</span>
-          <span class="control-value" id="lbl-propMortgage">£220,000</span>
-        </div>
-        <input type="range" id="sl-propMortgage" min="0" max="2000000" step="10000" value="220000" oninput="update()">
+      <div class="field">
+        <div class="field-head"><span class="field-label">Pension contribution (gross)</span><span class="field-value" id="lbl-pensionH">£0</span></div>
+        <input type="range" id="sl-pensionH" min="0" max="60000" step="500" value="0">
       </div>
 
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Mortgage rate (%)</span>
-          <span class="control-value" id="lbl-mortRate" style="display:none;"></span>
-        </div>
-        <div class="rate-row">
-          <input type="range" id="sl-mortRate" min="0" max="8" step="0.01" value="1.89" oninput="syncRate()">
-          <input type="number" id="num-mortRate" min="0" max="8" step="0.01" value="1.89" oninput="syncRate()" class="rate-num-input">
-          <span style="font-size:13px; color:var(--text-secondary);">%</span>
-        </div>
-      </div>
-
-      <div class="control-group" style="margin-bottom:0;">
-        <div class="control-header">
-          <span class="control-label">Ownership share — Husband (%)</span>
-          <span class="control-value" id="lbl-share">90%</span>
-        </div>
-        <input type="range" id="sl-share" min="0" max="100" step="5" value="90" oninput="update()">
+      <div class="field">
+        <div class="field-head"><span class="field-label">Savings interest</span><span class="field-value" id="lbl-savingsH">£1,000</span></div>
+        <input type="range" id="sl-savingsH" min="0" max="15000" step="100" value="1000">
       </div>
     </div>
 
-    <!-- RENTAL INCOME + INCOME BLOCK -->
-    <div class="card">
-      <div class="section-title">Rental income</div>
+    <!-- Wife -->
+    <div class="group">
+      <div class="group-label">Wife <span class="hint">Higher rate</span></div>
 
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Gross rental income (£/yr)</span>
-          <span class="control-value" id="lbl-rent">£54,000</span>
-        </div>
-        <input type="range" id="sl-rent" min="20000" max="100000" step="500" value="54000" oninput="update()">
+      <div class="field">
+        <div class="field-head"><span class="field-label">Salary</span><span class="field-value" id="lbl-salary">£130,000</span></div>
+        <input type="range" id="sl-salary" min="30000" max="300000" step="1000" value="130000">
       </div>
 
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Allowable costs excl. mortgage (£/yr)</span>
-          <span class="control-value" id="lbl-costs">£7,800</span>
-        </div>
-        <input type="range" id="sl-costs" min="0" max="25000" step="200" value="7800" oninput="update()">
+      <div class="field">
+        <div class="field-head"><span class="field-label">Pension contribution (gross)</span><span class="field-value" id="lbl-pensionW">£0</span></div>
+        <input type="range" id="sl-pensionW" min="0" max="60000" step="500" value="0">
       </div>
 
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Rental mortgage interest (£/yr)</span>
-          <span class="control-value" id="lbl-mintR">£4,200</span>
-        </div>
-        <input type="range" id="sl-mintR" min="0" max="25000" step="200" value="4200" oninput="update()">
-      </div>
-
-      <hr class="divider">
-      <div class="section-title">Income</div>
-
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Husband employment/other income (£/yr)</span>
-          <span class="control-value" id="lbl-husbandIncome">£0</span>
-        </div>
-        <input type="range" id="sl-husbandIncome" min="0" max="150000" step="1000" value="0" oninput="update()">
-      </div>
-
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Husband pension contribution, gross (£/yr)</span>
-          <span class="control-value" id="lbl-pensionH">£0</span>
-        </div>
-        <input type="range" id="sl-pensionH" min="0" max="60000" step="500" value="0" oninput="update()">
-      </div>
-
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Husband savings interest (£/yr)</span>
-          <span class="control-value" id="lbl-savingsH">£1,000</span>
-        </div>
-        <input type="range" id="sl-savingsH" min="0" max="15000" step="100" value="1000" oninput="update()">
-      </div>
-
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Wife salary (£/yr)</span>
-          <span class="control-value" id="lbl-salary">£130,000</span>
-        </div>
-        <input type="range" id="sl-salary" min="30000" max="300000" step="1000" value="130000" oninput="update()">
-      </div>
-
-      <div class="control-group">
-        <div class="control-header">
-          <span class="control-label">Wife pension contribution, gross (£/yr)</span>
-          <span class="control-value" id="lbl-pensionW">£0</span>
-        </div>
-        <input type="range" id="sl-pensionW" min="0" max="60000" step="500" value="0" oninput="update()">
-      </div>
-
-      <div class="control-group" style="margin-bottom:0;">
-        <div class="control-header">
-          <span class="control-label">Wife savings/other income (£/yr)</span>
-          <span class="control-value" id="lbl-savingsW">£0</span>
-        </div>
-        <input type="range" id="sl-savingsW" min="0" max="15000" step="100" value="0" oninput="update()">
+      <div class="field">
+        <div class="field-head"><span class="field-label">Savings / other income</span><span class="field-value" id="lbl-savingsW">£0</span></div>
+        <input type="range" id="sl-savingsW" min="0" max="15000" step="100" value="0">
       </div>
     </div>
 
-    <!-- SCENARIOS BLOCK -->
-    <div class="card">
-      <div class="section-title">Scenarios</div>
+    <!-- Beneficial split -->
+    <div class="group">
+      <div class="group-label">Beneficial Ownership <span class="hint">Rental only</span></div>
 
-      <div class="toggle-row">
-        <button class="toggle" id="tog-rebal" onclick="toggleIt('rebal')" aria-pressed="false"></button>
-        <span class="toggle-label">Mortgage rebalancing: shift £150k debt from residential to rental at renewal</span>
+      <div class="split-names">
+        <span class="h">Husband</span>
+        <span class="w">Wife</span>
       </div>
-      <div id="rebal-rate-row" style="display:none;" class="rebal-indent">
-        <div class="control-group" style="margin-bottom:0;">
-          <div class="control-header">
-            <span class="control-label">New rental mortgage rate (%)</span>
-            <span class="control-value" id="lbl-rebalRate">4.0%</span>
-          </div>
-          <input type="range" id="sl-rebalRate" min="3.0" max="7.0" step="0.1" value="4.0" oninput="update()" style="max-width:220px;">
+      <div class="split-viz">
+        <div class="split-bar">
+          <div class="h-side" id="split-h">90%</div>
+          <div class="w-side" id="split-w">10%</div>
         </div>
       </div>
+      <input type="range" id="sl-share" min="0" max="100" step="5" value="90">
 
-      <div class="toggle-row" style="margin-top:6px; margin-bottom:0;">
-        <button class="toggle" id="tog-compare" onclick="toggleIt('compare')" aria-pressed="false"></button>
-        <span class="toggle-label">Chart: compare selected split vs 50/50 baseline</span>
+      <div class="pill-row" style="margin-top:10px;">
+        <button class="pill" data-share="50">50 / 50</button>
+        <button class="pill" data-share="75">75 / 25</button>
+        <button class="pill active" data-share="90">90 / 10</button>
+        <button class="pill" data-share="99">99 / 1</button>
       </div>
     </div>
 
   </div>
 
-  <!-- RIGHT: RESULTS -->
-  <div>
-    <div class="card">
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('results')">Results</button>
-        <button class="tab" onclick="switchTab('breakdown')">Full breakdown</button>
-        <button class="tab" onclick="switchTab('issues')">Issues to watch</button>
+  <!-- COLUMN 2 — PROPERTY -->
+  <div class="col col-prop">
+    <div class="col-eyebrow"><span class="num">II</span><span>The Asset</span></div>
+    <h2 class="col-title">Property <em>& rent</em></h2>
+
+    <!-- Valuation -->
+    <div class="group">
+      <div class="group-label">Valuation</div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-label">Current market value</span><span class="field-value" id="lbl-propValue">£1,500,000</span></div>
+        <input type="range" id="sl-propValue" min="100000" max="5000000" step="50000" value="1500000">
       </div>
 
-      <!-- RESULTS -->
-      <div class="panel active" id="tab-results">
-        <div class="metrics-section-label">Tax burden</div>
-        <div class="metric-grid" id="metric-grid"></div>
-        <div class="metrics-section-label" style="margin-top:4px;">Net income after all tax</div>
-        <div class="metric-grid" id="metric-grid-net"></div>
-        <div id="flags-area"></div>
-        <div id="legend-area" class="legend" style="margin-top:12px;"></div>
-        <div class="chart-wrap">
-          <canvas id="chartResults" role="img" aria-label="Bar chart comparing income tax between Husband and Wife, or between baseline and selected scenario"></canvas>
+      <div class="field">
+        <div class="field-head"><span class="field-label">Original purchase cost (base cost)</span><span class="field-value" id="lbl-baseCost">£800,000</span></div>
+        <input type="range" id="sl-baseCost" min="50000" max="3000000" step="10000" value="800000">
+      </div>
+    </div>
+
+    <!-- Mortgage -->
+    <div class="group">
+      <div class="group-label">Mortgage</div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-label">Outstanding balance</span><span class="field-value" id="lbl-propMortgage">£220,000</span></div>
+        <input type="range" id="sl-propMortgage" min="0" max="2000000" step="10000" value="220000">
+      </div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-label">Interest rate</span></div>
+        <div class="inline-num">
+          <input type="range" id="sl-mortRate" min="0" max="8" step="0.01" value="4.5">
+          <input type="number" id="num-mortRate" min="0" max="8" step="0.01" value="4.5" class="num-input">
+          <span style="font-size:12px; color:var(--ink-3); font-family:var(--mono);">%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rent -->
+    <div class="group">
+      <div class="group-label">Rental Operations</div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-label">Gross rent (per year)</span><span class="field-value" id="lbl-rent">£54,000</span></div>
+        <input type="range" id="sl-rent" min="20000" max="150000" step="500" value="54000">
+      </div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-label">Allowable costs (ex. interest)</span><span class="field-value" id="lbl-costs">£7,800</span></div>
+        <input type="range" id="sl-costs" min="0" max="40000" step="200" value="7800">
+      </div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-label">Mortgage interest paid</span><span class="field-value" id="lbl-mintR">£9,900</span></div>
+        <input type="range" id="sl-mintR" min="0" max="50000" step="100" value="9900">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COLUMN 3 — RESULTS -->
+  <div class="col col-results">
+    <div class="col-eyebrow"><span class="num">III</span><span>The Outcome</span></div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="results">Dashboard</button>
+      <button class="tab" data-tab="projection">Projection</button>
+      <button class="tab" data-tab="cgt">Sale · CGT</button>
+      <button class="tab" data-tab="breakdown">Breakdown</button>
+      <button class="tab" data-tab="issues">Issues</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="tab-results">
+      <div class="results-hero">
+        <div class="hero-cell">
+          <div class="hero-label">Household net income</div>
+          <div class="hero-val" id="h-net">—</div>
+          <div class="hero-sub" id="h-net-sub">—</div>
+        </div>
+        <div class="hero-cell">
+          <div class="hero-label">Total tax &amp; NI</div>
+          <div class="hero-val" id="h-tax">—</div>
+          <div class="hero-sub" id="h-tax-sub">—</div>
+        </div>
+        <div class="hero-cell">
+          <div class="hero-label">Saving vs 50/50 split</div>
+          <div class="hero-val pos" id="h-save">—</div>
+          <div class="hero-sub" id="h-save-sub">—</div>
         </div>
       </div>
 
-      <!-- BREAKDOWN -->
-      <div class="panel" id="tab-breakdown">
-        <div id="breakdown-content"></div>
+      <div id="flags-area" class="flags"></div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Tax burden by spouse</div>
+          <div class="chart-meta" id="chart-meta">Current split</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chartResults"></canvas>
+        </div>
+        <div class="legend" id="legend-area"></div>
       </div>
 
-      <!-- ISSUES -->
-      <div class="panel" id="tab-issues">
-        <div id="issues-content"></div>
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Property P&amp;L</div>
+          <div class="chart-meta">Annual</div>
+        </div>
+        <div id="pnl-body"></div>
       </div>
+    </div>
+
+    <!-- PROJECTION -->
+    <div class="panel" id="tab-projection">
+      <div class="section-hdr">
+        <span class="kicker">IV · b</span>
+        <h2>Multi-year projection</h2>
+        <div class="rule"></div>
+      </div>
+      <p class="anno">Cashflow &amp; equity over time, holding the current split fixed. Adjust growth assumptions in <b>Tweaks</b>.</p>
+
+      <div class="pill-row" style="margin: 20px 0 16px;">
+        <button class="pill" data-horizon="5">5 years</button>
+        <button class="pill active" data-horizon="10">10 years</button>
+        <button class="pill" data-horizon="25">25 years</button>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Cashflow &amp; equity build-up</div>
+          <div class="chart-meta" id="proj-meta">—</div>
+        </div>
+        <div class="chart-wrap tall">
+          <canvas id="chartProjection"></canvas>
+        </div>
+        <div class="legend" id="proj-legend"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Cumulative figures</div>
+          <div class="chart-meta">At end of horizon</div>
+        </div>
+        <div id="proj-cumulative"></div>
+      </div>
+    </div>
+
+    <!-- CGT -->
+    <div class="panel" id="tab-cgt">
+      <div class="section-hdr">
+        <span class="kicker">IV · c</span>
+        <h2>Sale &amp; capital gains</h2>
+        <div class="rule"></div>
+      </div>
+      <p class="anno">Assumed timeline: purchased → lived in as main residence → let out → sold immediately at end of let.</p>
+
+      <div class="two-col" style="margin: 22px 0 18px;">
+        <div class="field">
+          <div class="field-head"><span class="field-label">Purchase date</span><span class="field-value" id="lbl-purchDate">—</span></div>
+          <input type="date" id="in-purchDate" value="2010-06-01" class="num-input" style="width:100%; text-align:left; font-size:13px; padding:4px 6px; border:1px solid var(--rule);">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-label">Rental start date</span><span class="field-value" id="lbl-rentStart">—</span></div>
+          <input type="date" id="in-rentStart" value="2020-06-01" class="num-input" style="width:100%; text-align:left; font-size:13px; padding:4px 6px; border:1px solid var(--rule);">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-label">Sale date</span><span class="field-value" id="lbl-saleDate">—</span></div>
+          <input type="date" id="in-saleDate" value="2026-06-01" class="num-input" style="width:100%; text-align:left; font-size:13px; padding:4px 6px; border:1px solid var(--rule);">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-label">Capital improvements</span><span class="field-value" id="lbl-capImp">£0</span></div>
+          <input type="range" id="sl-capImp" min="0" max="500000" step="1000" value="0">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-label">Selling costs (agents, legal)</span><span class="field-value" id="lbl-saleCost">£25,000</span></div>
+          <input type="range" id="sl-saleCost" min="0" max="100000" step="1000" value="25000">
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">CGT liability by ownership split</div>
+          <div class="chart-meta">At today's values</div>
+        </div>
+        <div id="cgt-body"></div>
+      </div>
+    </div>
+
+    <!-- BREAKDOWN -->
+    <div class="panel" id="tab-breakdown">
+      <div class="section-hdr">
+        <span class="kicker">IV · d</span>
+        <h2>Full computation</h2>
+        <div class="rule"></div>
+      </div>
+      <div id="breakdown-content"></div>
+    </div>
+
+    <!-- ISSUES -->
+    <div class="panel" id="tab-issues">
+      <div class="section-hdr">
+        <span class="kicker">IV · e</span>
+        <h2>Issues to watch</h2>
+        <div class="rule"></div>
+      </div>
+      <div id="issues-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer-note">
+  For modelling purposes only · Not financial, tax, or legal advice · Consult a solicitor &amp; tax adviser before changing beneficial ownership · UK tax figures 2026/27
+</div>
+
+<!-- ── TWEAKS PANEL ─────────────────────────────────────────── -->
+<div id="tweaks-panel">
+  <div class="tweaks-head">
+    <h3>Tweaks</h3>
+    <button class="close" onclick="window.__toggleTweaks(false)">close ✕</button>
+  </div>
+
+  <div class="group">
+    <div class="group-label">Tax year</div>
+    <div class="pill-row">
+      <button class="pill" data-tyear="2025/26">25/26</button>
+      <button class="pill active" data-tyear="2026/27">26/27</button>
+      <button class="pill" data-tyear="2027/28">27/28</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-label">Growth assumptions</div>
+
+    <div class="field">
+      <div class="field-head"><span class="field-label">Property growth %/yr</span><span class="field-value" id="lbl-tw-propGrowth">3.0%</span></div>
+      <input type="range" id="tw-propGrowth" min="-2" max="8" step="0.5" value="3">
+    </div>
+    <div class="field">
+      <div class="field-head"><span class="field-label">Rent growth %/yr</span><span class="field-value" id="lbl-tw-rentGrowth">3.5%</span></div>
+      <input type="range" id="tw-rentGrowth" min="0" max="8" step="0.5" value="3.5">
+    </div>
+    <div class="field">
+      <div class="field-head"><span class="field-label">Wage inflation %/yr</span><span class="field-value" id="lbl-tw-wageGrowth">2.5%</span></div>
+      <input type="range" id="tw-wageGrowth" min="0" max="8" step="0.5" value="2.5">
+    </div>
+    <div class="field">
+      <div class="field-head"><span class="field-label">Mortgage rate path (%)</span><span class="field-value" id="lbl-tw-rateNext">4.5%</span></div>
+      <input type="range" id="tw-rateNext" min="0" max="8" step="0.25" value="4.5">
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-label">Display</div>
+    <div class="toggle-row" onclick="window.__togTW('incNI')">
+      <button class="toggle on" id="tw-tog-incNI"></button>
+      <span class="toggle-text">Include NI in tax totals</span>
+    </div>
+    <div class="toggle-row" onclick="window.__togTW('compare')">
+      <button class="toggle" id="tw-tog-compare"></button>
+      <span class="toggle-text">Chart: compare selected split vs 50/50</span>
+    </div>
+    <div class="toggle-row" onclick="window.__togTW('rebal')">
+      <button class="toggle" id="tw-tog-rebal"></button>
+      <span class="toggle-text">Rebalance £150k debt residential → rental</span>
     </div>
   </div>
 </div>
 
-<footer>
-  For modelling purposes only.  This tool does not constitute financial, tax, or legal advice.  Consult a solicitor and tax adviser before making changes to beneficial ownership.  UK tax figures based on 2026/27 rates.
-</footer>
+<!-- ── EDITMODE DEFAULTS ─────────────────────────────────────── -->
+<script>
+  const TWEAKS = /*EDITMODE-BEGIN*/{
+    "propGrowth": 0.5,
+    "rentGrowth": 0,
+    "wageGrowth": 0,
+    "rateNext": 4,
+    "incNI": true,
+    "compare": false,
+    "rebal": false,
+    "taxYear": "2026\/27"
+  }/*EDITMODE-END*/;
+</script>
 
 <script>
-  // ── Constants ──────────────────────────────────────────────────────────────
-  const PA_BASE = 12570;
-  const BASIC_LIMIT = 50270;
-  const HIGHER_LIMIT = 125140;
+/* ── BTL Modeller — calculations & rendering ─────────────────── */
 
-  const toggleState = { rebal: false, compare: false };
-  let chartInst = null;
+// Tax year brackets
+const TAX_YEARS = {
+  "2025/26": { PA: 12570, BASIC: 50270, HIGHER: 125140, NI_PT: 12570, NI_UEL: 50270, NI_MAIN: 0.08, NI_UPPER: 0.02, CGT_BASIC: 0.18, CGT_HIGHER: 0.24, CGT_ALLOW: 3000 },
+  "2026/27": { PA: 12570, BASIC: 50270, HIGHER: 125140, NI_PT: 12570, NI_UEL: 50270, NI_MAIN: 0.08, NI_UPPER: 0.02, CGT_BASIC: 0.18, CGT_HIGHER: 0.24, CGT_ALLOW: 3000 },
+  "2027/28": { PA: 12570, BASIC: 50270, HIGHER: 125140, NI_PT: 12570, NI_UEL: 50270, NI_MAIN: 0.08, NI_UPPER: 0.02, CGT_BASIC: 0.18, CGT_HIGHER: 0.24, CGT_ALLOW: 3000 }
+};
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function fmt(n) {
-    return '£' + Math.round(n).toLocaleString('en-GB');
-  }
+let currentYear = TWEAKS.taxYear;
+let projHorizon = 10;
+let chartResults = null, chartOpt = null, chartProj = null;
 
-  function syncRate() {
-    const sl  = document.getElementById('sl-mortRate');
-    const num = document.getElementById('num-mortRate');
-    if (document.activeElement === sl) {
-      num.value = (+sl.value).toFixed(2);
-    } else {
-      const v = Math.min(8, Math.max(0, +num.value || 0));
-      sl.value  = v;
-      num.value = v.toFixed(2);
-    }
-    update();
-  }
+// ── Helpers ──────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmt = n => '£' + Math.round(n).toLocaleString('en-GB');
+const fmtK = n => {
+  const v = Math.round(n);
+  if (Math.abs(v) >= 1000000) return '£' + (v / 1000000).toFixed(2).replace(/\.?0+$/, '') + 'm';
+  if (Math.abs(v) >= 1000) return '£' + (v / 1000).toFixed(0) + 'k';
+  return '£' + v.toLocaleString('en-GB');
+};
+const pct = n => (n * 100).toFixed(1) + '%';
 
-  // ── Tax calculation ────────────────────────────────────────────────────────
-  // earnedIncome: salary + rental profit share + employment income
-  // savingsIncome: interest only
-  function calcIncomeTax(earnedIncome, savingsIncome) {
-    const totalIncome = earnedIncome + savingsIncome;
+// ── Tax calculation ──────────────────────────────────────────
+function calcIncomeTax(earned, savings, y) {
+  const total = earned + savings;
+  let pa = y.PA;
+  if (total > 100000) pa = Math.max(0, y.PA - Math.floor((total - 100000) / 2));
+  let psa = 0;
+  if (total <= y.BASIC) psa = 1000;
+  else if (total <= y.HIGHER) psa = 500;
 
-    // Personal allowance taper above £100k
-    let pa = PA_BASE;
-    if (totalIncome > 100000) {
-      pa = Math.max(0, PA_BASE - Math.floor((totalIncome - 100000) / 2));
-    }
+  const taxable = Math.max(0, earned - pa);
+  const basicBand = Math.max(0, y.BASIC - pa);
+  const higherBand = y.HIGHER - y.BASIC;
 
-    // Personal savings allowance
-    let psa = 0;
-    if (totalIncome <= BASIC_LIMIT) psa = 1000;
-    else if (totalIncome <= HIGHER_LIMIT) psa = 500;
+  const basic = Math.min(taxable, basicBand);
+  const higher = Math.min(Math.max(0, taxable - basicBand), higherBand);
+  const addl = Math.max(0, taxable - (y.HIGHER - pa));
+  let earnedTax = basic * 0.20 + higher * 0.40 + addl * 0.45;
 
-    // Tax on earned income
-    const taxableEarned = Math.max(0, earnedIncome - pa);
-    let earnedTax = 0;
-    const basic  = Math.min(taxableEarned, Math.max(0, BASIC_LIMIT - pa));
-    const higher = Math.min(Math.max(0, taxableEarned - Math.max(0, BASIC_LIMIT - pa)), HIGHER_LIMIT - BASIC_LIMIT);
-    const addl   = Math.max(0, taxableEarned - (HIGHER_LIMIT - pa));
-    if (basic  > 0) earnedTax += basic  * 0.20;
-    if (higher > 0) earnedTax += higher * 0.40;
-    if (addl   > 0) earnedTax += addl   * 0.45;
+  const taxableSavings = Math.max(0, savings - psa);
+  let margRate = 0.20;
+  if (earned > y.HIGHER) margRate = 0.45;
+  else if (earned > y.BASIC) margRate = 0.40;
+  const savingsTax = taxableSavings * margRate;
 
-    // Tax on savings
-    const taxableSavings = Math.max(0, savingsIncome - psa);
-    let marginalRate = 0.20;
-    if (earnedIncome > HIGHER_LIMIT) marginalRate = 0.45;
-    else if (earnedIncome > BASIC_LIMIT) marginalRate = 0.40;
-    const savingsTax = taxableSavings * marginalRate;
+  return { tax: earnedTax + savingsTax, pa, psa, marginalRate: margRate };
+}
 
-    return {
-      tax: Math.max(0, earnedTax + savingsTax),
-      pa, psa, marginalRate
-    };
-  }
+function calcNI(salary, y) {
+  const primary = Math.min(Math.max(0, salary - y.NI_PT), y.NI_UEL - y.NI_PT) * y.NI_MAIN;
+  const upper = Math.max(0, salary - y.NI_UEL) * y.NI_UPPER;
+  return primary + upper;
+}
 
-  // NI Class 1 on salary (simplified)
-  function calcNI(salary) {
-    const primary = Math.min(Math.max(0, salary - 12570), 50270 - 12570) * 0.08;
-    const upper   = Math.max(0, salary - 50270) * 0.02;
-    return primary + upper;
-  }
+function calcScenario(i, shareH, y) {
+  const shareW = 1 - shareH;
+  const netRent = i.rent - i.costs;
 
-  function calcScenario(rent, costs, mintR, shareH, benEmployed, savingsH, salary, savingsW) {
-    const shareW  = 1 - shareH;
-    const netRent = rent - costs;
+  // Section 24 — interest not deductible, 20% credit
+  const rentH = netRent * shareH;
+  const rentW = netRent * shareW;
+  const mintH = i.mintR * shareH;
+  const mintW = i.mintR * shareW;
+  const creditH = mintH * 0.20;
+  const creditW = mintW * 0.20;
 
-    const rentH    = netRent * shareH;
-    const rentW    = netRent * shareW;
-    const mintH    = mintR * shareH;
-    const mintW    = mintR * shareW;
-    const creditB  = mintH * 0.20;
-    const creditJ  = mintW * 0.20;
+  // Pension reduces adjusted net income (via relief at source), effectively extending bands
+  // Simplification: treat pension as reducing taxable earned income
+  const husbandEarned = Math.max(0, (i.husbandIncome + rentH) - i.pensionH);
+  const hCalc = calcIncomeTax(husbandEarned, i.savingsH, y);
+  const husbandTax = Math.max(0, hCalc.tax - creditH);
 
-    const husbandEarned = benEmployed + rentH;
-    const husbandCalc   = calcIncomeTax(husbandEarned, savingsH);
-    const benTaxFinal   = Math.max(0, husbandCalc.tax - creditB);
+  const wifeEarned = Math.max(0, (i.salary + rentW) - i.pensionW);
+  const wCalc = calcIncomeTax(wifeEarned, i.savingsW, y);
+  const wifeTax = Math.max(0, wCalc.tax - creditW);
+  const wifeNI = calcNI(i.salary, y);
 
-    const wifeEarned  = salary + rentW;
-    const wifeCalc    = calcIncomeTax(wifeEarned, savingsW);
-    const jessTaxFinal = Math.max(0, wifeCalc.tax - creditJ);
-    const wifeNI      = calcNI(salary);
+  const husbandGross = i.husbandIncome + rentH + i.savingsH;
+  const wifeGross = i.salary + rentW + i.savingsW;
+  const husbandNet = husbandGross - husbandTax - i.pensionH;
+  const wifeNet = wifeGross - wifeTax - wifeNI - i.pensionW;
 
-    const husbandGross = benEmployed + rentH + savingsH;
-    const wifeGross    = salary + rentW + savingsW;
-    const husbandNet   = husbandGross - benTaxFinal;
-    const wifeNet      = wifeGross - jessTaxFinal - wifeNI;
+  return {
+    shareH, shareW, netRent, rentH, rentW, mintH, mintW, creditH, creditW,
+    husbandEarned, wifeEarned, husbandGross, wifeGross, husbandNet, wifeNet,
+    husbandTax, wifeTax, wifeNI,
+    husbandPA: hCalc.pa, wifePA: wCalc.pa,
+    husbandMarg: hCalc.marginalRate, wifeMarg: wCalc.marginalRate,
+    husbandTaxBefore: hCalc.tax, wifeTaxBefore: wCalc.tax,
+    household: husbandTax + wifeTax + wifeNI,
+    householdNet: husbandNet + wifeNet
+  };
+}
 
-    return {
-      husbandTax: benTaxFinal,
-      wifeTax:    jessTaxFinal,
-      wifeNI,
-      household:      benTaxFinal + jessTaxFinal + wifeNI,
-      householdNoNI:  benTaxFinal + jessTaxFinal,
-      husbandEarned, wifeEarned,
-      rentH, rentW, netRent,
-      husbandCredit: creditB, wifeCredit: creditJ,
-      husbandPA:     husbandCalc.pa,  wifePA:      wifeCalc.pa,
-      husbandMarginal: husbandCalc.marginalRate, wifeMarginal: wifeCalc.marginalRate,
-      husbandTaxBeforeCredit: husbandCalc.tax,
-      wifeTaxBeforeCredit:    wifeCalc.tax,
-      mintH, mintW,
-      husbandGross, wifeGross,
-      husbandNet, wifeNet
-    };
-  }
+// ── Read inputs ──────────────────────────────────────────────
+function getInputs() {
+  return {
+    rent: +$('sl-rent').value,
+    costs: +$('sl-costs').value,
+    mintR: +$('sl-mintR').value,
+    husbandIncome: +$('sl-husbandIncome').value,
+    pensionH: +$('sl-pensionH').value,
+    savingsH: +$('sl-savingsH').value,
+    salary: +$('sl-salary').value,
+    pensionW: +$('sl-pensionW').value,
+    savingsW: +$('sl-savingsW').value,
+    shareH: +$('sl-share').value / 100,
+    propValue: +$('sl-propValue').value,
+    propMortgage: +$('sl-propMortgage').value,
+    mortRate: +$('sl-mortRate').value,
+    baseCost: +$('sl-baseCost').value,
+    saleCost: +$('sl-saleCost').value,
+    capImp: +$('sl-capImp').value,
+    purchDate: $('in-purchDate').value,
+    rentStart: $('in-rentStart').value,
+    saleDate: $('in-saleDate').value
+  };
+}
 
-  // ── UI helpers ─────────────────────────────────────────────────────────────
-  function toggleIt(key) {
-    toggleState[key] = !toggleState[key];
-    const btn = document.getElementById('tog-' + key);
-    btn.classList.toggle('on', toggleState[key]);
-    btn.setAttribute('aria-pressed', toggleState[key]);
-    if (key === 'rebal') {
-      document.getElementById('rebal-rate-row').style.display = toggleState[key] ? 'block' : 'none';
-    }
-    update();
-  }
-
-  function switchTab(id) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById('tab-' + id).classList.add('active');
-  }
-
-  // ── Main update ────────────────────────────────────────────────────────────
-  function update() {
-    const rent          = +document.getElementById('sl-rent').value;
-    const costs         = +document.getElementById('sl-costs').value;
-    let   mintR         = +document.getElementById('sl-mintR').value;
-    const shareH        = +document.getElementById('sl-share').value / 100;
-    const husbandIncome = +document.getElementById('sl-husbandIncome').value;
-    const pensionH      = +document.getElementById('sl-pensionH').value;
-    const savingsH      = +document.getElementById('sl-savingsH').value;
-    const salary        = +document.getElementById('sl-salary').value;
-    const pensionW      = +document.getElementById('sl-pensionW').value;
-    const savingsW      = +document.getElementById('sl-savingsW').value;
-    const rebalRate     = +document.getElementById('sl-rebalRate').value;
-    const propValue     = +document.getElementById('sl-propValue').value;
-    const propMortgage  = +document.getElementById('sl-propMortgage').value;
-
-    // Label updates
-    document.getElementById('lbl-rent').textContent          = fmt(rent);
-    document.getElementById('lbl-costs').textContent         = fmt(costs);
-    document.getElementById('lbl-mintR').textContent         = fmt(mintR);
-    document.getElementById('lbl-share').textContent         = Math.round(shareH * 100) + '%';
-    document.getElementById('lbl-husbandIncome').textContent = fmt(husbandIncome);
-    document.getElementById('lbl-pensionH').textContent      = fmt(pensionH);
-    document.getElementById('lbl-savingsH').textContent      = fmt(savingsH);
-    document.getElementById('lbl-salary').textContent        = fmt(salary);
-    document.getElementById('lbl-pensionW').textContent      = fmt(pensionW);
-    document.getElementById('lbl-savingsW').textContent      = fmt(savingsW);
-    document.getElementById('lbl-rebalRate').textContent     = rebalRate.toFixed(1) + '%';
-    document.getElementById('lbl-propValue').textContent     = fmt(propValue);
-    document.getElementById('lbl-propMortgage').textContent  = fmt(propMortgage);
-
-    // Rebalancing adjustment
-    let rebalInterestAdd = 0;
-    if (toggleState.rebal) {
-      rebalInterestAdd = 150000 * (rebalRate / 100);
-      mintR = mintR + rebalInterestAdd;
-    }
-
-    const base     = calcScenario(rent, costs, mintR, 0.5,    husbandIncome, savingsH, salary, savingsW);
-    const scenario = calcScenario(rent, costs, mintR, shareH, husbandIncome, savingsH, salary, savingsW);
-    const saving   = base.household - scenario.household;
-
-    // ── Tax burden metrics ──
-    document.getElementById('metric-grid').innerHTML = `
-      <div class="metric">
-        <div class="metric-label">Annual saving vs 50/50</div>
-        <div class="metric-val ${saving >= 0 ? 'pos' : 'neg'}">${saving >= 0 ? '+' : ''}${fmt(saving)}</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Husband income tax</div>
-        <div class="metric-val">${fmt(scenario.husbandTax)}</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Wife income tax</div>
-        <div class="metric-val">${fmt(scenario.wifeTax)}</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Household total (inc NI)</div>
-        <div class="metric-val">${fmt(scenario.household)}</div>
-      </div>
-    `;
-
-    // ── Net income metrics ──
-    document.getElementById('metric-grid-net').innerHTML = `
-      <div class="metric">
-        <div class="metric-label">Husband net income</div>
-        <div class="metric-val">${fmt(scenario.husbandNet)}</div>
-        <div class="metric-sub">Gross ${fmt(scenario.husbandGross)} &minus; tax ${fmt(scenario.husbandTax)}</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Wife net income</div>
-        <div class="metric-val">${fmt(scenario.wifeNet)}</div>
-        <div class="metric-sub">Gross ${fmt(scenario.wifeGross)} &minus; tax &amp; NI ${fmt(scenario.wifeTax + scenario.wifeNI)}</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Household net income</div>
-        <div class="metric-val">${fmt(scenario.husbandNet + scenario.wifeNet)}</div>
-        <div class="metric-sub">Combined after all tax</div>
-      </div>
-    `;
-
-    // ── Flags ──
-    let flags = '';
-    const wifeTotal = salary + scenario.rentW + savingsW;
-    if (wifeTotal > 100000) {
-      const paLost = Math.min(PA_BASE, Math.floor((wifeTotal - 100000) / 2));
-      flags += `<div class="flag warn"><strong>Personal allowance trap (Wife):</strong>  Total income of ${fmt(wifeTotal)} — Wife loses £${Math.round(paLost).toLocaleString()} of personal allowance, creating an effective 60% marginal rate on income between £100k–£125,140.</div>`;
-    }
-    if (scenario.husbandTax < 100) {
-      flags += `<div class="flag good"><strong>Husband has negligible income tax</strong> at this split — rental share absorbed within personal allowance and basic rate band.</div>`;
-    }
-    if (toggleState.rebal) {
-      flags += `<div class="flag info"><strong>Rebalancing adds ${fmt(rebalInterestAdd)}/yr interest</strong> to the rental — increases the Section 24 credit pool.  Net cash impact depends on reduction in residential interest.</div>`;
-    }
-    const benTotal = husbandIncome + scenario.rentH + savingsH;
-    if (benTotal > 100000) {
-      flags += `<div class="flag warn"><strong>Husband now approaches the £100k trap</strong> at this split — consider whether this undermines the benefit.</div>`;
-    }
-    document.getElementById('flags-area').innerHTML = flags;
-
-    // ── Chart ──
-    let labels, datasets, stacked;
-    const textColor = '#6b6a65';
-    const gridColor = 'rgba(255,255,255,0.06)';
-
-    if (toggleState.compare) {
-      labels = ['50/50 baseline', `${Math.round(shareH*100)}/${Math.round((1-shareH)*100)} split`];
-      datasets = [{
-        label: 'Total household tax + NI',
-        data: [Math.round(base.household), Math.round(scenario.household)],
-        backgroundColor: ['#888780', '#1D9E75'],
-        borderRadius: 5
-      }];
-      stacked = false;
-      document.getElementById('legend-area').innerHTML = `
-        <div class="legend-item"><span class="legend-swatch" style="background:#888780;"></span>50/50 baseline</div>
-        <div class="legend-item"><span class="legend-swatch" style="background:#1D9E75;"></span>${Math.round(shareH*100)}/${Math.round((1-shareH)*100)} split</div>
-      `;
-    } else {
-      labels = ['Husband', 'Wife'];
-      datasets = [
-        { label: 'Income tax',      data: [Math.round(scenario.husbandTax), Math.round(scenario.wifeTax)], backgroundColor: '#378ADD', borderRadius: 3 },
-        { label: 'NI (Wife salary)', data: [0, Math.round(scenario.wifeNI)],                               backgroundColor: '#B4B2A9', borderRadius: 3 }
-      ];
-      stacked = true;
-      document.getElementById('legend-area').innerHTML = `
-        <div class="legend-item"><span class="legend-swatch" style="background:#378ADD;"></span>Income tax</div>
-        <div class="legend-item"><span class="legend-swatch" style="background:#B4B2A9;"></span>NI (Wife salary)</div>
-      `;
-    }
-
-    if (chartInst) chartInst.destroy();
-    chartInst = new Chart(document.getElementById('chartResults'), {
-      type: 'bar',
-      data: { labels, datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: {
-            stacked,
-            ticks: { color: textColor, font: { size: 12 } },
-            grid: { display: false }
-          },
-          y: {
-            stacked,
-            ticks: {
-              color: textColor,
-              font: { size: 12 },
-              callback: v => '£' + Math.round(v).toLocaleString('en-GB')
-            },
-            grid: { color: gridColor }
-          }
-        }
-      }
+// ── Persistence ──────────────────────────────────────────────
+const STORAGE_KEY = 'btl-modeller-inputs-v1';
+const PERSIST_IDS = [
+  'sl-rent','sl-costs','sl-mintR','sl-husbandIncome','sl-pensionH','sl-savingsH',
+  'sl-salary','sl-pensionW','sl-savingsW','sl-share','sl-propValue','sl-propMortgage',
+  'sl-mortRate','sl-baseCost','sl-saleCost','sl-capImp',
+  'num-mortRate',
+  'in-purchDate','in-rentStart','in-saleDate'
+];
+function saveInputs() {
+  try {
+    const snap = {};
+    PERSIST_IDS.forEach(id => { const el = $(id); if (el) snap[id] = el.value; });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snap));
+  } catch (e) {}
+}
+function restoreInputs() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const snap = JSON.parse(raw);
+    PERSIST_IDS.forEach(id => {
+      const el = $(id);
+      if (el && snap[id] !== undefined) el.value = snap[id];
     });
+  } catch (e) {}
+}
+function resetInputs() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  location.reload();
+}
+window.resetBTLInputs = resetInputs;
 
-    // ── Breakdown ──
-    const mkRow = (label, ben, jess, strong, sub) => {
-      if (sub) return `<tr class="sub-head"><td colspan="3">${label}</td></tr>`;
-      return `
-        <tr class="${strong ? 'strong-row' : ''}">
-          <td>${label}</td>
-          <td>${ben  !== null ? fmt(ben)  : '—'}</td>
-          <td>${jess !== null ? fmt(jess) : '—'}</td>
-        </tr>`;
-    };
-    document.getElementById('breakdown-content').innerHTML = `
-      <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
-        Scenario: Husband ${Math.round(shareH*100)}% / Wife ${Math.round((1-shareH)*100)}%.
-        ${toggleState.rebal ? `Rental interest includes ${fmt(rebalInterestAdd)} rebalancing addition.` : ''}
-      </p>
-      <table class="breakdown-table">
-        <thead>
-          <tr><th>Item</th><th>Husband</th><th>Wife</th></tr>
-        </thead>
-        <tbody>
-          ${mkRow('Employment / other income', husbandIncome || null, salary)}
-          ${mkRow('Rental net profit share', scenario.rentH, scenario.rentW)}
-          ${mkRow('Savings interest', savingsH, savingsW)}
-          ${mkRow('Total gross income', scenario.husbandGross, scenario.wifeGross, true)}
-          ${mkRow('Income tax computation', null, null, false, true)}
-          ${mkRow('Personal allowance', scenario.husbandPA, scenario.wifePA)}
-          ${mkRow('Tax before Sec.24 credit', scenario.husbandTaxBeforeCredit, scenario.wifeTaxBeforeCredit)}
-          ${mkRow('Sec.24 credit (20% of interest share)', -scenario.husbandCredit, -scenario.wifeCredit)}
-          ${mkRow('Income tax payable', scenario.husbandTax, scenario.wifeTax, true)}
-          ${mkRow('National Insurance (salary)', 0, scenario.wifeNI)}
-          ${mkRow('Total tax burden', scenario.husbandTax, scenario.wifeTax + scenario.wifeNI, true)}
-          ${mkRow('Net income after tax', scenario.husbandNet, scenario.wifeNet, true)}
-        </tbody>
-      </table>
-      <p style="margin-top:10px; font-size:12px; color:var(--text-secondary);">
-        Section 24: mortgage interest is not deductible from rental profit.  Each owner receives a 20% basic-rate tax credit on their share of interest paid.  This is neutral for basic-rate taxpayers; higher-rate taxpayers receive less relief than they pay.
-      </p>
-    `;
+// ── Main update ──────────────────────────────────────────────
+function update() {
+  saveInputs();
+  const i = getInputs();
+  const y = TAX_YEARS[currentYear];
 
-    // ── Issues ──
-    const wifeGrossAmt = fmt(salary + scenario.rentW + savingsW);
-    document.getElementById('issues-content').innerHTML = `
-      <div class="issue-card">
-        <span class="issue-severity sev-high">High priority</span>
-        <div class="issue-title">Personal allowance trap — Wife</div>
-        <div class="issue-body">Wife's total income of ${wifeGrossAmt} places her in the taper zone (£100k–£125,140) where the effective marginal rate is 60%.  Every pound of rental income in this band that flows to Wife is taxed at this rate.  Shifting the maximum defensible share to Husband directly addresses this.  Consider also pension contributions to reduce Wife's adjusted net income.</div>
-      </div>
-      <div class="issue-card">
-        <span class="issue-severity sev-high">High priority</span>
-        <div class="issue-title">Form 17 and deed of trust</div>
-        <div class="issue-body">Beneficial ownership changes between spouses require: (1) a formal deed of trust executed by a solicitor, creating genuine economic ownership in the new proportions; (2) Form 17 filed with HMRC within 60 days of the deed — without it, HMRC defaults to 50/50 regardless of the actual split.  The arrangement must reflect real economic substance; a sham will be challenged.</div>
-      </div>
-      <div class="issue-card">
-        <span class="issue-severity sev-med">Review required</span>
-        <div class="issue-title">SDLT and CGT on the ownership transfer</div>
-        <div class="issue-body">Inter-spouse transfers are generally exempt from CGT (no-gain/no-loss) and SDLT during marriage.  However, where a mortgage exists, any debt assumed by the transferee may be treated as chargeable consideration for SDLT purposes.  Your solicitor must confirm the position given the rental mortgage balance — this is especially important before any rebalancing.</div>
-      </div>
-      <div class="issue-card">
-        <span class="issue-severity sev-med">Review required</span>
-        <div class="issue-title">Section 24 — mortgage interest restriction</div>
-        <div class="issue-body">Since April 2020, mortgage interest is not deductible as a rental expense.  Each owner receives a 20% tax credit on their share of interest.  For a nil/basic-rate taxpayer like Husband, this credit offsets tax at the same rate as it is given — effectively neutral.  For Wife as a higher-rate taxpayer, interest relief is restricted to 20% rather than 40%.  Shifting ownership and debt to Husband maximises the relief's effectiveness.</div>
-      </div>
-      <div class="issue-card">
-        <span class="issue-severity sev-med">Review required</span>
-        <div class="issue-title">Mortgage rebalancing at renewal</div>
-        <div class="issue-body">Moving debt from the residential property (no tax relief on interest) to the rental (Section 24 credit applies) increases the effective relief available.  However: (1) lenders assess affordability and rental yield coverage — LTV on the rental rises from ~15% to ~25%; (2) buy-to-let rates typically carry a premium over residential; (3) the offset savings account means actual interest charged may be lower than the headline rate — confirm with your lender.  Run the rebalancing toggle above to model the impact.</div>
-      </div>
-      <div class="issue-card">
-        <span class="issue-severity sev-info">Action needed</span>
-        <div class="issue-title">Self-assessment — Husband</div>
-        <div class="issue-body">Once Husband's share of rental income exceeds £1,000, he must register for self-assessment and submit annual tax returns.  At a 90% split his rental profit share is substantial.  Registration should be in place for the tax year in which the deed of trust takes effect — HMRC's deadline for registering is 5 October following the end of the relevant tax year.</div>
-      </div>
-      <div class="issue-card">
-        <span class="issue-severity sev-info">Worth noting</span>
-        <div class="issue-title">Capital gains tax on eventual sale</div>
-        <div class="issue-body">Beneficial ownership proportions also determine how any future capital gain on the rental property is split between the two of you.  The lower-income spouse's share may attract a lower CGT rate (18% vs 24% for higher-rate payers).  The current split chosen now will set the CGT position at sale — worth factoring in if a sale is contemplated in the medium term.</div>
-      </div>
-    `;
+  // Apply rebalancing tweak (adds £150k × rateNext interest to rental)
+  if (TWEAKS.rebal) {
+    i.mintR += 150000 * (TWEAKS.rateNext / 100);
   }
 
-  // Initialise
+  // Labels
+  $('lbl-husbandIncome').textContent = fmt(i.husbandIncome);
+  $('lbl-pensionH').textContent = fmt(i.pensionH);
+  $('lbl-savingsH').textContent = fmt(i.savingsH);
+  $('lbl-salary').textContent = fmt(i.salary);
+  $('lbl-pensionW').textContent = fmt(i.pensionW);
+  $('lbl-savingsW').textContent = fmt(i.savingsW);
+  $('lbl-rent').textContent = fmt(i.rent);
+  $('lbl-costs').textContent = fmt(i.costs);
+  $('lbl-mintR').textContent = fmt(i.mintR);
+  $('lbl-propValue').textContent = fmt(i.propValue);
+  $('lbl-propMortgage').textContent = fmt(i.propMortgage);
+  $('lbl-baseCost').textContent = fmt(i.baseCost);
+  $('lbl-saleCost').textContent = fmt(i.saleCost);
+  $('lbl-capImp').textContent = fmt(i.capImp);
+
+  // CGT date labels
+  const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  const lblPD = $('lbl-purchDate'); if (lblPD) lblPD.textContent = fmtDate(i.purchDate);
+  const lblRS = $('lbl-rentStart'); if (lblRS) lblRS.textContent = fmtDate(i.rentStart);
+  const lblSD = $('lbl-saleDate'); if (lblSD) lblSD.textContent = fmtDate(i.saleDate);
+
+  // Split visual
+  const hPct = Math.round(i.shareH * 100);
+  const wPct = 100 - hPct;
+  $('split-h').style.flex = hPct;
+  $('split-w').style.flex = wPct;
+  $('split-h').textContent = hPct + '%';
+  $('split-w').textContent = wPct + '%';
+
+  // Active pill
+  document.querySelectorAll('.pill[data-share]').forEach(p => {
+    p.classList.toggle('active', +p.dataset.share === hPct);
+  });
+
+  // Scenarios
+  const base = calcScenario(i, 0.5, y);
+  const scen = calcScenario(i, i.shareH, y);
+  const saving = base.household - scen.household;
+
+  // ── Hero ──
+  $('h-net').textContent = fmt(scen.householdNet);
+  $('h-net-sub').textContent = `H ${fmtK(scen.husbandNet)} · W ${fmtK(scen.wifeNet)}`;
+  const taxTotal = TWEAKS.incNI ? scen.household : (scen.husbandTax + scen.wifeTax);
+  $('h-tax').textContent = fmt(taxTotal);
+  $('h-tax-sub').textContent = TWEAKS.incNI ? `Income tax + NI` : `Income tax only`;
+  $('h-save').textContent = (saving >= 0 ? '+' : '') + fmt(saving);
+  $('h-save').className = 'hero-val ' + (saving >= 0 ? 'pos' : 'neg');
+  $('h-save-sub').textContent = saving > 0 ? `${hPct}/${wPct} vs 50/50` : 'No advantage';
+
+  // Sub-bar
+  $('sb-year').textContent = currentYear;
+  $('sb-summary').textContent = `${hPct}/${wPct} split · Net ${fmtK(scen.householdNet)} · Tax ${fmtK(taxTotal)}`;
+  $('mast-date').textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  // ── Flags ──
+  let flags = '';
+  const wifeTotal = i.salary + scen.rentW + i.savingsW - i.pensionW;
+  if (wifeTotal > 100000 && wifeTotal < 125140) {
+    const paLost = Math.min(y.PA, Math.floor((wifeTotal - 100000) / 2));
+    flags += `<div class="flag warn"><b>Personal allowance trap (Wife)</b> — adjusted income of ${fmt(wifeTotal)}. Wife loses ${fmt(paLost)} of PA, creating an effective <b>60% marginal rate</b>. Pension contribution or shifting share to husband both help.</div>`;
+  }
+  if (scen.husbandTax < 100 && i.husbandIncome < 50270) {
+    flags += `<div class="flag good"><b>Husband's tax bill is near zero</b> at this split — rental share absorbed within PA &amp; basic band.</div>`;
+  }
+  const benTotal = i.husbandIncome + scen.rentH + i.savingsH;
+  if (benTotal > 90000) {
+    flags += `<div class="flag bad"><b>Husband approaching higher-rate band</b> (${fmt(benTotal)}). Diminishing returns from further shift of ownership.</div>`;
+  }
+  if (TWEAKS.rebal) {
+    const addInt = 150000 * (TWEAKS.rateNext / 100);
+    flags += `<div class="flag info"><b>Rebalancing active</b> — rental interest increased by ${fmt(addInt)}/yr. Section 24 credit pool rises accordingly.</div>`;
+  }
+  $('flags-area').innerHTML = flags;
+
+  // ── Results chart ──
+  renderResultsChart(scen, base, hPct, wPct);
+
+  // ── P&L ──
+  renderPnL(i, scen, y);
+
+  // ── Projection ──
+  renderProjection(i, y);
+
+  // ── CGT ──
+  renderCGT(i, scen, y);
+
+  // ── Breakdown ──
+  renderBreakdown(i, scen, hPct, wPct);
+
+  // ── Issues ──
+  renderIssues(i, scen);
+}
+
+// ── Results chart ────────────────────────────────────────────
+function renderResultsChart(scen, base, hPct, wPct) {
+  const ctx = $('chartResults');
+  if (chartResults) chartResults.destroy();
+
+  let labels, datasets;
+  if (TWEAKS.compare) {
+    labels = ['50/50 baseline', `${hPct}/${wPct} selected`];
+    datasets = [
+      { label: 'Husband tax + NI', data: [base.husbandTax, scen.husbandTax], backgroundColor: '#c08a3e', stack: 's' },
+      { label: 'Wife tax + NI',    data: [base.wifeTax,    scen.wifeTax],    backgroundColor: '#8a3a2a', stack: 's' }
+    ];
+    $('chart-meta').textContent = `Compare · 50/50 vs ${hPct}/${wPct}`;
+  } else {
+    labels = ['Husband', 'Wife'];
+    datasets = [
+      { label: 'Income tax',         data: [scen.husbandTax, scen.wifeTax], backgroundColor: '#8a3a2a', stack: 's' },
+      { label: 'National Insurance', data: [0,               scen.wifeNI],  backgroundColor: '#c08a3e', stack: 's' }
+    ];
+    $('chart-meta').textContent = `Current split · ${hPct}/${wPct}`;
+  }
+
+  chartResults = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: chartOpts(true, false) });
+
+  // Legend
+  const items = datasets.map(d => `<div class="legend-item"><span class="legend-swatch" style="background:${d.backgroundColor};"></span>${d.label}</div>`).join('');
+  $('legend-area').innerHTML = items;
+}
+
+// ── Chart options factory ────────────────────────────────────
+function chartOpts(stacked, showLegend = false) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: showLegend } },
+    interaction: { intersect: false, mode: 'index' },
+    scales: {
+      x: { stacked: !!stacked, ticks: { color: '#7a746a', font: { family: 'IBM Plex Mono', size: 11 } }, grid: { display: false }, border: { color: '#1a1815' } },
+      y: { stacked: !!stacked, beginAtZero: true, ticks: { color: '#7a746a', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => fmtK(v) }, grid: { color: '#e6dfcd' }, border: { display: false } }
+    }
+  };
+}
+
+// ── Property P&L ─────────────────────────────────────────────
+function renderPnL(i, scen, y) {
+  // Property-only tax: calc household tax WITHOUT the rental, then subtract.
+  // Because other income (salary, savings) is taxed first, the rental sits "on top" — so
+  // the delta is the true marginal tax on rental profits for each spouse.
+  const baseInputs = { ...i, rent: 0, costs: 0, mintR: 0 };
+  const noRent = calcScenario(baseInputs, i.shareH, y);
+
+  const husbTaxNoRent = noRent.husbandTax;
+  const wifeTaxNoRent = noRent.wifeTax;
+  const husbTaxOnRent = scen.husbandTax - husbTaxNoRent;
+  const wifeTaxOnRent = scen.wifeTax - wifeTaxNoRent;
+  const totalTaxOnRent = husbTaxOnRent + wifeTaxOnRent;
+
+  const grossProfit = i.rent - i.costs;
+  const cashBeforeTax = grossProfit - i.mintR;
+  const netAfterTax  = cashBeforeTax - totalTaxOnRent;
+
+  const hPct = Math.round(i.shareH * 100);
+  const wPct = 100 - hPct;
+
+  // Effective rate on the rental share (what's actually paid on THIS chunk of rent)
+  const husbShareProfit = scen.rentH;
+  const wifeShareProfit = scen.rentW;
+  const hRate = husbShareProfit !== 0 ? husbTaxOnRent / husbShareProfit : 0;
+  const wRate = wifeShareProfit !== 0 ? wifeTaxOnRent / wifeShareProfit : 0;
+  const blendRate = grossProfit !== 0 ? totalTaxOnRent / grossProfit : 0;
+
+  // True marginal rate — tax on the NEXT £1 of rental (probe +£1 of profit)
+  const bumpProfit = (who) => {
+    const bumped = { ...i };
+    if (who === 'H') bumped.rent = i.rent + 1 / Math.max(1e-6, i.shareH);
+    else              bumped.rent = i.rent + 1 / Math.max(1e-6, 1 - i.shareH);
+    return calcScenario(bumped, i.shareH, y);
+  };
+  const probeH = bumpProfit('H');
+  const probeW = bumpProfit('W');
+  const hMarg = probeH.husbandTax - scen.husbandTax;
+  const wMarg = probeW.wifeTax    - scen.wifeTax;
+  const snap = r => { const bands = [0, 0.20, 0.40, 0.45, 0.60]; return bands.reduce((a,b)=>Math.abs(b-r)<Math.abs(a-r)?b:a); };
+
+  const equity = Math.max(1, i.propValue - i.propMortgage);
+
+  $('pnl-body').innerHTML = `
+    <table class="bdn">
+      <thead>
+        <tr><th>Line item</th><th>Amount</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr class="subhead"><td colspan="3">Operating — before tax</td></tr>
+        <tr><td>Gross rental income</td><td>${fmt(i.rent)}</td><td class="muted">—</td></tr>
+        <tr><td>Less: allowable costs</td><td class="neg">${fmt(-i.costs)}</td><td class="muted">excl. interest</td></tr>
+        <tr class="strong"><td>Rental profit (for tax)</td><td>${fmt(grossProfit)}</td><td class="muted">pre Section 24</td></tr>
+        <tr><td>Mortgage interest</td><td class="neg">${fmt(-i.mintR)}</td><td class="muted">not deductible</td></tr>
+        <tr class="strong"><td>Cashflow before tax</td><td class="${cashBeforeTax>=0?'pos':'neg'}">${fmt(cashBeforeTax)}</td><td class="muted">actual £ into household</td></tr>
+
+        <tr class="subhead"><td colspan="3">Tax attributable to the property</td></tr>
+        <tr class="muted"><td colspan="3" style="font-style:italic; color:var(--ink-3); padding-bottom:2px;">Method: household tax with vs without rental. Allowances &amp; bands consumed by earned &amp; savings income first; rental taxed at marginal rate on top.</td></tr>
+        <tr><td>Husband — rental profit share</td><td>${fmt(husbShareProfit)}</td><td class="muted">${hPct}%</td></tr>
+        <tr><td>Husband — tax on rental share</td><td class="neg">${fmt(husbTaxOnRent)}</td><td class="muted">eff. ${pct(hRate)} &middot; marginal ${pct(snap(hMarg))}</td></tr>
+        <tr><td>Wife — rental profit share</td><td>${fmt(wifeShareProfit)}</td><td class="muted">${wPct}%</td></tr>
+        <tr><td>Wife — tax on rental share</td><td class="neg">${fmt(wifeTaxOnRent)}</td><td class="muted">eff. ${pct(wRate)} &middot; marginal ${pct(snap(wMarg))}</td></tr>
+        <tr class="strong"><td>Total tax paid on property</td><td class="neg">${fmt(totalTaxOnRent)}</td><td class="muted">blended eff. ${pct(blendRate)}</td></tr>
+
+        <tr class="subhead"><td colspan="3">True return</td></tr>
+        <tr class="strong"><td>Net cashflow after tax</td><td class="${netAfterTax>=0?'pos':'neg'}">${fmt(netAfterTax)}</td><td class="muted">pocketed</td></tr>
+        <tr class="muted"><td>Gross yield on property value</td><td>${pct(i.rent / i.propValue)}</td><td>${fmt(i.rent)} ÷ ${fmt(i.propValue)}</td></tr>
+        <tr class="muted"><td>Net yield on property value</td><td>${pct(netAfterTax / i.propValue)}</td><td>after costs, interest, tax</td></tr>
+        <tr class="muted"><td>Return on equity (cash-on-cash)</td><td>${pct(netAfterTax / equity)}</td><td>${fmt(equity)} equity</td></tr>
+      </tbody>
+    </table>
+    <p class="anno" style="margin-top:12px;"><b>Effective rate</b> = total tax ÷ rental profit share; may be a blend (e.g. 20% + 40%) if the rental spans two bands. <b>Marginal rate</b> = tax on the next £1 of rental, always snapped to 0 / 20 / 40 / 45 / 60%. The 60% rate applies in the £100k–£125k band where the personal allowance tapers.</p>
+  `;
+}
+
+// ── Projection ───────────────────────────────────────────────
+function renderProjection(i, y) {
+  const N = projHorizon;
+  const pg = TWEAKS.propGrowth / 100;
+  const rg = TWEAKS.rentGrowth / 100;
+  const wg = TWEAKS.wageGrowth / 100;
+
+  const labels = [];
+  const equity = [];
+  const cashYr = [];
+  const taxYr = [];
+  const cgtArr = [];
+  let cumNet = 0;
+  let cumTax = 0;
+  const cumNetArr = [];
+  const cumTaxArr = [];
+
+  const today = new Date();
+
+  for (let t = 0; t <= N; t++) {
+    labels.push('Y' + t);
+    const valT = i.propValue * Math.pow(1 + pg, t);
+    // Interest-only assumption: mortgage balance stays flat (user hasn't specified paydown).
+    const mortT = i.propMortgage;
+
+    // Hypothetical CGT if sold at year t: saleDate rolls forward t years from today,
+    // propValue grows, letting period grows → PRR fraction dilutes.
+    const hypoSaleDate = new Date(today.getFullYear() + t, today.getMonth(), today.getDate());
+    const cgtInputs = { ...i, propValue: valT, saleDate: hypoSaleDate.toISOString().slice(0, 10) };
+    const cgtT = calcCGT(cgtInputs, i.shareH, y);
+    cgtArr.push(Math.round(cgtT.cgtTotal));
+
+    // Equity = value − outstanding mortgage − latent CGT on sale today at this value.
+    const eqT = valT - mortT - cgtT.cgtTotal;
+    equity.push(Math.round(eqT));
+
+    // Year t cashflow
+    const rentT = i.rent * Math.pow(1 + rg, t);
+    const costsT = i.costs * Math.pow(1 + rg, t);
+    const mintT = mortT * (TWEAKS.rateNext / 100);
+    const salaryT = i.salary * Math.pow(1 + wg, t);
+    const inpT = { ...i, rent: rentT, costs: costsT, mintR: mintT, salary: salaryT };
+    const s = calcScenario(inpT, i.shareH, y);
+
+    const propCash = (rentT - costsT) - mintT;
+    cashYr.push(Math.round(propCash));
+    taxYr.push(Math.round(s.household));
+
+    cumNet += s.householdNet;
+    cumTax += s.household;
+    cumNetArr.push(Math.round(cumNet));
+    cumTaxArr.push(Math.round(cumTax));
+  }
+
+  if (chartProj) chartProj.destroy();
+  chartProj = new Chart($('chartProjection'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Property equity', data: equity, borderColor: '#2d5d48', backgroundColor: 'rgba(45,93,72,0.10)', fill: true, tension: 0.15, pointRadius: 2, yAxisID: 'y' },
+        { label: 'Latent CGT if sold', data: cgtArr, borderColor: '#5b3a7a', backgroundColor: 'transparent', borderDash: [5, 4], tension: 0.15, pointRadius: 2, yAxisID: 'y' },
+        { label: 'Annual property cashflow', data: cashYr, borderColor: '#c08a3e', backgroundColor: 'transparent', borderDash: [4, 3], tension: 0.15, pointRadius: 2, yAxisID: 'y1' },
+        { label: 'Annual household tax + NI', data: taxYr, borderColor: '#8a3a2a', backgroundColor: 'transparent', borderDash: [2, 2], tension: 0.15, pointRadius: 2, yAxisID: 'y1' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      interaction: { intersect: false, mode: 'index' },
+      scales: {
+        x: { ticks: { color: '#7a746a', font: { family: 'IBM Plex Mono', size: 10 } }, grid: { display: false }, border: { color: '#1a1815' } },
+        y: { position: 'left', ticks: { color: '#2d5d48', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => fmtK(v) }, grid: { color: '#e6dfcd' }, border: { display: false }, title: { display: true, text: 'Equity (left)', color: '#7a746a', font: { family: 'IBM Plex Mono', size: 9 } } },
+        y1: { position: 'right', ticks: { color: '#c08a3e', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => fmtK(v) }, grid: { display: false }, border: { display: false }, title: { display: true, text: 'Annual flows (right)', color: '#7a746a', font: { family: 'IBM Plex Mono', size: 9 } } }
+      }
+    }
+  });
+
+  $('proj-legend').innerHTML = `
+    <div class="legend-item"><span class="legend-swatch" style="background:#2d5d48;"></span>Property equity (net of mortgage &amp; CGT)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#5b3a7a;"></span>Latent CGT if sold</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#c08a3e;"></span>Annual property cashflow</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#8a3a2a;"></span>Annual household tax + NI</div>
+  `;
+
+  $('proj-meta').textContent = `${N}-year horizon · Prop ${TWEAKS.propGrowth}% · Rent ${TWEAKS.rentGrowth}%`;
+
+  $('proj-cumulative').innerHTML = `
+    <table class="bdn">
+      <tbody>
+        <tr><td>Property value at Y${N}</td><td>${fmt(i.propValue * Math.pow(1 + TWEAKS.propGrowth/100, N))}</td></tr>
+        <tr><td>Outstanding mortgage</td><td class="neg">${fmt(-i.propMortgage)}</td></tr>
+        <tr><td>Latent CGT if sold at Y${N}</td><td class="neg">${fmt(-cgtArr[N])}</td></tr>
+        <tr class="strong"><td>Net equity at Y${N}</td><td class="pos">${fmt(equity[N])}</td></tr>
+        <tr><td>Net equity gained vs today</td><td class="pos">${fmt(equity[N] - equity[0])}</td></tr>
+        <tr class="strong"><td>Cumulative household net income (${N} yrs)</td><td>${fmt(cumNetArr[N])}</td></tr>
+        <tr><td>Cumulative tax + NI paid</td><td class="neg">${fmt(cumTaxArr[N])}</td></tr>
+      </tbody>
+    </table>
+  `;
+}
+
+// ── CGT ──────────────────────────────────────────────────────
+function calcCGT(i, shareH, y) {
+  const totalGain = Math.max(0, i.propValue - i.baseCost - i.capImp - i.saleCost);
+
+  // ── Private Residence Relief (PRR) ──
+  // Timeline: purchase → (lived in, exempt) → rental start → sale
+  // PRR covers the period of occupation PLUS the final 9 months of ownership.
+  const MS_PER_MONTH = 1000 * 60 * 60 * 24 * (365.25 / 12);
+  const months = (a, b) => Math.max(0, (b - a) / MS_PER_MONTH);
+
+  const purch = new Date(i.purchDate);
+  const rentS = new Date(i.rentStart);
+  const sale  = new Date(i.saleDate);
+  const totalMonths = months(purch, sale);
+  const occupiedMonths = months(purch, rentS);
+  const lettingMonths  = months(rentS, sale);
+
+  // Final-9-months rule: included in PRR, capped so you don't double-count occupation
+  const finalNine = Math.min(9, totalMonths);
+  // Occupation months already include any final-9 period if rentS ≥ sale − 9m; avoid double counting
+  const periodsWithin9 = Math.min(finalNine, Math.max(0, totalMonths - occupiedMonths));
+  const prrMonths = Math.min(totalMonths, occupiedMonths + periodsWithin9);
+  const prrFraction = totalMonths > 0 ? prrMonths / totalMonths : 0;
+  const prrRelief = totalGain * prrFraction;
+
+  const chargeableGain = Math.max(0, totalGain - prrRelief);
+
+  const gainH = chargeableGain * shareH;
+  const gainW = chargeableGain * (1 - shareH);
+
+  const taxableH = Math.max(0, gainH - y.CGT_ALLOW);
+  const taxableW = Math.max(0, gainW - y.CGT_ALLOW);
+
+  // CGT rate determined by total UK taxable income INCLUDING rental share (after PA and pension).
+  const netRent = i.rent - i.costs;
+  const rentH = netRent * shareH;
+  const rentW = netRent * (1 - shareH);
+
+  const husbandIncomeTotal = i.husbandIncome + rentH + i.savingsH - i.pensionH;
+  const wifeIncomeTotal    = i.salary + rentW + i.savingsW - i.pensionW;
+
+  const paH = Math.max(0, y.PA - Math.max(0, Math.floor((husbandIncomeTotal - 100000) / 2)));
+  const paW = Math.max(0, y.PA - Math.max(0, Math.floor((wifeIncomeTotal - 100000) / 2)));
+
+  const taxableIncomeH = Math.max(0, husbandIncomeTotal - paH);
+  const taxableIncomeW = Math.max(0, wifeIncomeTotal - paW);
+
+  const hHeadroom = Math.max(0, y.BASIC - taxableIncomeH);
+  const wHeadroom = Math.max(0, y.BASIC - taxableIncomeW);
+
+  const hBasic  = Math.min(taxableH, hHeadroom);
+  const hHigher = taxableH - hBasic;
+  const wBasic  = Math.min(taxableW, wHeadroom);
+  const wHigher = taxableW - wBasic;
+
+  const cgtH = hBasic * y.CGT_BASIC + hHigher * y.CGT_HIGHER;
+  const cgtW = wBasic * y.CGT_BASIC + wHigher * y.CGT_HIGHER;
+
+  return {
+    totalGain, prrRelief, chargeableGain,
+    prrFraction, totalMonths, occupiedMonths, lettingMonths, finalNine: periodsWithin9, prrMonths,
+    gainH, gainW, taxableH, taxableW,
+    cgtH, cgtW, cgtTotal: cgtH + cgtW,
+    netH: gainH - cgtH, netW: gainW - cgtW,
+    netTotal: chargeableGain - cgtH - cgtW,
+    effRate: chargeableGain > 0 ? (cgtH + cgtW) / chargeableGain : 0,
+    husbandIncomeTotal, wifeIncomeTotal,
+    taxableIncomeH, taxableIncomeW,
+    hHeadroom, wHeadroom,
+    hBasic, hHigher, wBasic, wHigher,
+    hEffRate: taxableH > 0 ? cgtH / taxableH : 0,
+    wEffRate: taxableW > 0 ? cgtW / taxableW : 0,
+    CGT_BASIC: y.CGT_BASIC, CGT_HIGHER: y.CGT_HIGHER
+  };
+}
+
+function renderCGT(i, scen, y) {
+  const cgt = calcCGT(i, i.shareH, y);
+  const cgt5050 = calcCGT(i, 0.5, y);
+  const equity = i.propValue - i.propMortgage;
+  const netProceeds = equity - cgt.cgtTotal;
+
+  $('cgt-body').innerHTML = `
+    <table class="bdn">
+      <tbody>
+        <tr class="subhead"><td colspan="3">Ownership timeline</td></tr>
+        <tr><td>Total period of ownership</td><td colspan="2">${cgt.totalMonths.toFixed(1)} months (${(cgt.totalMonths/12).toFixed(1)} yrs)</td></tr>
+        <tr><td>Occupied as main residence</td><td colspan="2" class="pos">${cgt.occupiedMonths.toFixed(1)} months</td></tr>
+        <tr><td>Let out</td><td colspan="2">${cgt.lettingMonths.toFixed(1)} months</td></tr>
+        <tr><td>Final 9 months (deemed PRR)</td><td colspan="2" class="pos">${cgt.finalNine.toFixed(1)} months</td></tr>
+        <tr class="strong"><td>PRR exempt fraction</td><td colspan="2" class="pos">${pct(cgt.prrFraction)} (${cgt.prrMonths.toFixed(1)} of ${cgt.totalMonths.toFixed(1)} months)</td></tr>
+        <tr class="subhead"><td colspan="3">Gain calculation</td></tr>
+        <tr><td>Sale proceeds</td><td colspan="2">${fmt(i.propValue)}</td></tr>
+        <tr><td>Less: base cost</td><td colspan="2" class="neg">${fmt(-i.baseCost)}</td></tr>
+        <tr><td>Less: capital improvements</td><td colspan="2" class="neg">${fmt(-i.capImp)}</td></tr>
+        <tr><td>Less: selling costs</td><td colspan="2" class="neg">${fmt(-i.saleCost)}</td></tr>
+        <tr class="strong"><td>Total gain before reliefs</td><td colspan="2">${fmt(cgt.totalGain)}</td></tr>
+        <tr><td>Less: Private Residence Relief</td><td colspan="2" class="pos">${fmt(-cgt.prrRelief)}</td></tr>
+        <tr class="strong"><td>Chargeable gain after PRR</td><td colspan="2">${fmt(cgt.chargeableGain)}</td></tr>
+        <tr class="subhead"><td>By owner</td><td>Husband</td><td>Wife</td></tr>
+        <tr><td>Share of chargeable gain</td><td>${fmt(cgt.gainH)}</td><td>${fmt(cgt.gainW)}</td></tr>
+        <tr><td>Less: annual exempt amount</td><td class="pos">${fmt(Math.min(cgt.gainH, y.CGT_ALLOW))}</td><td class="pos">${fmt(Math.min(cgt.gainW, y.CGT_ALLOW))}</td></tr>
+        <tr><td>Taxable gain</td><td>${fmt(cgt.taxableH)}</td><td>${fmt(cgt.taxableW)}</td></tr>
+        <tr class="subhead"><td colspan="3">Rate determination</td></tr>
+        <tr class="muted"><td>Taxable income (ex. gain)</td><td>${fmt(cgt.taxableIncomeH)}</td><td>${fmt(cgt.taxableIncomeW)}</td></tr>
+        <tr class="muted"><td>Headroom in basic band (to £${y.BASIC.toLocaleString('en-GB')})</td><td>${fmt(cgt.hHeadroom)}</td><td>${fmt(cgt.wHeadroom)}</td></tr>
+        <tr><td>Gain taxed @ ${(y.CGT_BASIC * 100).toFixed(0)}% (basic)</td><td>${fmt(cgt.hBasic)}</td><td>${fmt(cgt.wBasic)}</td></tr>
+        <tr><td>Gain taxed @ ${(y.CGT_HIGHER * 100).toFixed(0)}% (higher)</td><td>${fmt(cgt.hHigher)}</td><td>${fmt(cgt.wHigher)}</td></tr>
+        <tr class="muted"><td>Effective CGT rate on taxable gain</td><td>${pct(cgt.hEffRate)}</td><td>${pct(cgt.wEffRate)}</td></tr>
+        <tr class="strong"><td>CGT payable</td><td class="neg">${fmt(cgt.cgtH)}</td><td class="neg">${fmt(cgt.cgtW)}</td></tr>
+        <tr class="subhead"><td colspan="3">Summary</td></tr>
+        <tr><td>Total CGT at current split</td><td colspan="2">${fmt(cgt.cgtTotal)}</td></tr>
+        <tr><td>Total CGT at 50/50</td><td colspan="2">${fmt(cgt5050.cgtTotal)}</td></tr>
+        <tr class="strong"><td>Difference</td><td colspan="2" class="${cgt5050.cgtTotal - cgt.cgtTotal >= 0 ? 'pos' : 'neg'}">${(cgt5050.cgtTotal - cgt.cgtTotal >= 0 ? '+' : '') + fmt(cgt5050.cgtTotal - cgt.cgtTotal)}</td></tr>
+        <tr class="strong"><td>Net proceeds after CGT + mortgage</td><td colspan="2" class="pos">${fmt(netProceeds)}</td></tr>
+      </tbody>
+    </table>
+    <p class="anno" style="margin-top:14px;"><b>PRR:</b> time spent as main residence is exempt, plus the final 9 months of ownership are deemed occupation. <b>Rates 2026/27:</b> 18% within basic-band headroom, 24% above. Each spouse has a £${y.CGT_ALLOW.toLocaleString('en-GB')} annual exempt amount.</p>
+  `;
+
+}
+
+// ── Breakdown ────────────────────────────────────────────────
+function renderBreakdown(i, s, hPct, wPct) {
+  const row = (label, h, w, strong, sub) => {
+    if (sub) return `<tr class="subhead"><td colspan="3">${label}</td></tr>`;
+    return `<tr class="${strong ? 'strong' : ''}"><td>${label}</td><td>${h !== null ? fmt(h) : '—'}</td><td>${w !== null ? fmt(w) : '—'}</td></tr>`;
+  };
+  $('breakdown-content').innerHTML = `
+    <p class="anno" style="margin-bottom: 18px;">Split: Husband ${hPct}% · Wife ${wPct}%. Figures are annual, current tax year ${currentYear}.</p>
+    <table class="bdn">
+      <thead>
+        <tr><th>Item</th><th>Husband</th><th>Wife</th></tr>
+      </thead>
+      <tbody>
+        ${row('Income', null, null, false, true)}
+        ${row('Employment / salary', i.husbandIncome || null, i.salary)}
+        ${row('Rental profit share', s.rentH, s.rentW)}
+        ${row('Savings interest', i.savingsH, i.savingsW)}
+        ${row('Pension contribution', -i.pensionH, -i.pensionW)}
+        ${row('Total taxable income (after pension relief)', s.husbandGross - i.pensionH, s.wifeGross - i.pensionW, true)}
+        ${row('Income tax computation', null, null, false, true)}
+        ${row('Personal allowance', s.husbandPA, s.wifePA)}
+        ${row('Tax before S.24 credit', s.husbandTaxBefore, s.wifeTaxBefore)}
+        ${row('S.24 credit (20% of interest share)', -s.creditH, -s.creditW)}
+        ${row('Income tax payable', s.husbandTax, s.wifeTax, true)}
+        ${row('National Insurance', 0, s.wifeNI)}
+        ${row('Total tax &amp; NI', s.husbandTax, s.wifeTax + s.wifeNI, true)}
+        ${row('Net income (after tax, NI, pension)', s.husbandNet, s.wifeNet, true)}
+      </tbody>
+    </table>
+    <p class="anno" style="margin-top: 18px;">Section 24: mortgage interest is not a deductible rental expense. Each owner receives a 20% basic-rate tax credit on their share of interest. Neutral for basic-rate taxpayers; higher-rate payers get less relief than they pay.</p>
+  `;
+}
+
+// ── Issues ───────────────────────────────────────────────────
+function renderIssues(i, s) {
+  const wifeTotal = i.salary + s.rentW + i.savingsW - i.pensionW;
+  $('issues-content').innerHTML = `
+    ${wifeTotal > 100000 ? `
+    <div class="issue">
+      <div class="issue-head"><div class="issue-title">Personal allowance trap — Wife</div><div class="issue-sev sev-high">High</div></div>
+      <div class="issue-body">Wife's adjusted income of ${fmt(wifeTotal)} falls in the £100k–£125,140 taper where the effective marginal rate is 60%. Every £1 of rental profit routed to Wife inside this band is taxed at 60p. Addressing this is the single largest-impact lever in the model: shift ownership toward Husband, or contribute to pension to reduce adjusted net income.</div>
+    </div>` : ''}
+    <div class="issue">
+      <div class="issue-head"><div class="issue-title">Form 17 &amp; deed of trust</div><div class="issue-sev sev-high">High</div></div>
+      <div class="issue-body">Beneficial ownership changes between spouses require (1) a deed of trust drafted by a solicitor creating real economic ownership in the new proportions, and (2) Form 17 filed with HMRC within 60 days of the deed. Without both, HMRC defaults to 50/50 regardless of what you've agreed.</div>
+    </div>
+    <div class="issue">
+      <div class="issue-head"><div class="issue-title">SDLT &amp; CGT on the ownership transfer</div><div class="issue-sev sev-med">Review</div></div>
+      <div class="issue-body">Inter-spouse transfers are usually exempt from CGT (no-gain/no-loss) and SDLT while married. However, where a mortgage exists, debt assumed by the transferee may count as chargeable consideration for SDLT. Have your solicitor confirm the position given the current mortgage balance.</div>
+    </div>
+    <div class="issue">
+      <div class="issue-head"><div class="issue-title">Section 24 — mortgage interest restriction</div><div class="issue-sev sev-med">Review</div></div>
+      <div class="issue-body">Since April 2020 mortgage interest has not been a deductible rental expense; owners receive a 20% tax credit instead. This is neutral for basic-rate taxpayers and restrictive for higher-rate payers (relief capped at 20% where tax is charged at 40–45%). Shifting ownership toward the lower-rate spouse maximises the credit's efficiency.</div>
+    </div>
+    <div class="issue">
+      <div class="issue-head"><div class="issue-title">Pension annual allowance</div><div class="issue-sev sev-info">Note</div></div>
+      <div class="issue-body">Standard allowance is £60,000; it tapers above £260,000 of threshold income. Contributions use gross equivalent amounts. Carry-forward of up to 3 prior years' unused allowance is available where the individual was a member of a registered pension scheme in those years.</div>
+    </div>
+    <div class="issue">
+      <div class="issue-head"><div class="issue-title">Self-assessment — Husband</div><div class="issue-sev sev-info">Action</div></div>
+      <div class="issue-body">Once Husband's share of rental income exceeds £1,000 he must register for self-assessment and submit annual returns. Register by 5 October following the end of the first relevant tax year.</div>
+    </div>
+    <div class="issue">
+      <div class="issue-head"><div class="issue-title">Capital gains on eventual sale</div><div class="issue-sev sev-info">Plan</div></div>
+      <div class="issue-body">The split set now will govern how a future gain is apportioned. The lower-rate spouse's share attracts 18% rather than 24% CGT. Two annual exempt amounts are available — currently £3,000 each. Any change to the split shortly before sale may be scrutinised by HMRC.</div>
+    </div>
+  `;
+}
+
+// ── Wire up ──────────────────────────────────────────────────
+document.querySelectorAll('input[type="range"]').forEach(el => {
+  if (!el.id.startsWith('tw-')) el.addEventListener('input', update);
+});
+
+// Date inputs for CGT timeline
+['in-purchDate', 'in-rentStart', 'in-saleDate'].forEach(id => {
+  const el = $(id); if (el) el.addEventListener('change', update);
+});
+
+$('sl-mortRate').addEventListener('input', () => {
+  $('num-mortRate').value = (+$('sl-mortRate').value).toFixed(2);
   update();
+});
+$('num-mortRate').addEventListener('input', () => {
+  const v = Math.min(8, Math.max(0, +$('num-mortRate').value || 0));
+  $('sl-mortRate').value = v;
+  update();
+});
+
+// Share pills
+document.querySelectorAll('.pill[data-share]').forEach(p => {
+  p.addEventListener('click', () => {
+    $('sl-share').value = +p.dataset.share;
+    update();
+  });
+});
+
+// Horizon pills
+document.querySelectorAll('.pill[data-horizon]').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.pill[data-horizon]').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    projHorizon = +p.dataset.horizon;
+    update();
+  });
+});
+
+// Tax year pills
+document.querySelectorAll('.pill[data-tyear]').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.pill[data-tyear]').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    currentYear = p.dataset.tyear;
+    TWEAKS.taxYear = currentYear;
+    persist();
+    update();
+  });
+});
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    $('tab-' + t.dataset.tab).classList.add('active');
+    setTimeout(update, 10);
+  });
+});
+
+// ── Tweaks panel ─────────────────────────────────────────────
+function persist() {
+  try { localStorage.setItem('btl_tweaks', JSON.stringify(TWEAKS)); } catch (e) {}
+  window.parent.postMessage({ type: '__edit_mode_set_keys', edits: TWEAKS }, '*');
+}
+
+window.__togTW = (key) => {
+  TWEAKS[key] = !TWEAKS[key];
+  $('tw-tog-' + key).classList.toggle('on', TWEAKS[key]);
+  persist();
+  update();
+};
+
+['propGrowth', 'rentGrowth', 'wageGrowth', 'rateNext'].forEach(k => {
+  const el = $('tw-' + k);
+  el.value = TWEAKS[k];
+  const lbl = $('lbl-tw-' + k);
+  const upd = () => {
+    TWEAKS[k] = +el.value;
+    lbl.textContent = TWEAKS[k].toFixed(1) + '%';
+    persist();
+    update();
+  };
+  el.addEventListener('input', upd);
+  lbl.textContent = TWEAKS[k].toFixed(1) + '%';
+});
+
+// Initialise toggle visual states
+['incNI', 'compare', 'rebal'].forEach(k => {
+  $('tw-tog-' + k).classList.toggle('on', TWEAKS[k]);
+});
+
+// Active tax-year pill
+document.querySelectorAll('.pill[data-tyear]').forEach(p => {
+  p.classList.toggle('active', p.dataset.tyear === TWEAKS.taxYear);
+});
+
+// Tweaks host contract
+window.__toggleTweaks = (on) => {
+  $('tweaks-panel').classList.toggle('open', on);
+};
+window.addEventListener('message', e => {
+  if (!e.data) return;
+  if (e.data.type === '__activate_edit_mode') window.__toggleTweaks(true);
+  if (e.data.type === '__deactivate_edit_mode') window.__toggleTweaks(false);
+});
+window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+
+// Restore from localStorage
+try {
+  const stored = JSON.parse(localStorage.getItem('btl_tweaks') || '{}');
+  Object.assign(TWEAKS, stored);
+  currentYear = TWEAKS.taxYear;
+  ['propGrowth', 'rentGrowth', 'wageGrowth', 'rateNext'].forEach(k => {
+    $('tw-' + k).value = TWEAKS[k];
+    $('lbl-tw-' + k).textContent = (+TWEAKS[k]).toFixed(1) + '%';
+  });
+  ['incNI', 'compare', 'rebal'].forEach(k => {
+    $('tw-tog-' + k).classList.toggle('on', TWEAKS[k]);
+  });
+  document.querySelectorAll('.pill[data-tyear]').forEach(p => {
+    p.classList.toggle('active', p.dataset.tyear === TWEAKS.taxYear);
+  });
+} catch (e) {}
+
+// GO
+restoreInputs();
+const resetLink = $('reset-link');
+if (resetLink) {
+  resetLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (confirm('Reset all inputs to defaults? This clears saved state.')) resetInputs();
+  });
+}
+update();
+
 </script>
+
 </body>
 </html>
