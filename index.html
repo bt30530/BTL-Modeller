@@ -1021,23 +1021,23 @@ function calcScenario(i, shareH, y) {
   const shareW = 1 - shareH;
   const netRent = i.rent - i.costs;
 
-  // Section 24 — interest not deductible, 20% credit
+  // Section 24 — interest not deductible, 20% basic-rate credit (capped at tax liability)
   const rentH = netRent * shareH;
   const rentW = netRent * shareW;
   const mintH = i.mintR * shareH;
   const mintW = i.mintR * shareW;
-  const creditH = mintH * 0.20;
-  const creditW = mintW * 0.20;
 
   // Pension reduces adjusted net income (via relief at source), effectively extending bands
   // Simplification: treat pension as reducing taxable earned income
   const husbandEarned = Math.max(0, (i.husbandIncome + rentH) - i.pensionH);
   const hCalc = calcIncomeTax(husbandEarned, i.savingsH, y);
-  const husbandTax = Math.max(0, hCalc.tax - creditH);
+  const creditH = Math.min(mintH * 0.20, hCalc.tax);
+  const husbandTax = hCalc.tax - creditH;
 
   const wifeEarned = Math.max(0, (i.salary + rentW) - i.pensionW);
   const wCalc = calcIncomeTax(wifeEarned, i.savingsW, y);
-  const wifeTax = Math.max(0, wCalc.tax - creditW);
+  const creditW = Math.min(mintW * 0.20, wCalc.tax);
+  const wifeTax = wCalc.tax - creditW;
   const wifeNI = calcNI(i.salary, y);
 
   const husbandGross = i.husbandIncome + rentH + i.savingsH;
