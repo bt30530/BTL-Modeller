@@ -740,6 +740,11 @@ input[type="range"]::-moz-range-thumb {
         <div class="field-head"><span class="field-label">Inflation (CPI)</span><span class="field-value" id="lbl-inflation">2.9%</span></div>
         <input type="range" id="sl-inflation" min="0" max="10" step="0.1" value="2.9">
       </div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-label">Wage growth</span><span class="field-value" id="lbl-wageGrowth">0.0%</span></div>
+        <input type="range" id="sl-wageGrowth" min="0" max="8" step="0.5" value="0">
+      </div>
     </div>
 
   </div>
@@ -758,6 +763,17 @@ input[type="range"]::-moz-range-thumb {
 
     <!-- DASHBOARD -->
     <div class="panel active" id="tab-results">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+        <div class="pill-row" style="margin:0;">
+          <button class="pill" data-tyear="2025/26">25/26</button>
+          <button class="pill active" data-tyear="2026/27">26/27</button>
+          <button class="pill" data-tyear="2027/28">27/28</button>
+        </div>
+        <div class="pill-row" style="margin:0;">
+          <button class="pill active" id="tog-incNI" title="Include National Insurance in tax totals">Inc. NI</button>
+          <button class="pill" id="tog-compare" title="Compare selected split against 50/50 baseline">Compare vs 50/50</button>
+        </div>
+      </div>
       <div class="results-hero">
         <div class="hero-cell">
           <div class="hero-label">Household net income</div>
@@ -901,63 +917,6 @@ input[type="range"]::-moz-range-thumb {
   For modelling purposes only · Not financial, tax, or legal advice · Consult a solicitor &amp; tax adviser before changing beneficial ownership · UK tax figures 2026/27
 </div>
 
-<!-- ── TWEAKS PANEL ─────────────────────────────────────────── -->
-<div id="tweaks-panel">
-  <div class="tweaks-head">
-    <h3>Tweaks</h3>
-    <button class="close" onclick="window.__toggleTweaks(false)">close ✕</button>
-  </div>
-
-  <div class="group">
-    <div class="group-label">Tax year</div>
-    <div class="pill-row">
-      <button class="pill" data-tyear="2025/26">25/26</button>
-      <button class="pill active" data-tyear="2026/27">26/27</button>
-      <button class="pill" data-tyear="2027/28">27/28</button>
-    </div>
-  </div>
-
-  <div class="group">
-    <div class="group-label">Growth assumptions</div>
-
-    <div class="field">
-      <div class="field-head"><span class="field-label">Wage inflation %/yr</span><span class="field-value" id="lbl-tw-wageGrowth">2.5%</span></div>
-      <input type="range" id="tw-wageGrowth" min="0" max="8" step="0.5" value="2.5">
-    </div>
-    <div class="field">
-      <div class="field-head"><span class="field-label">Mortgage rate path (%)</span><span class="field-value" id="lbl-tw-rateNext">4.5%</span></div>
-      <input type="range" id="tw-rateNext" min="0" max="8" step="0.25" value="4.5">
-    </div>
-  </div>
-
-  <div class="group">
-    <div class="group-label">Display</div>
-    <div class="toggle-row" onclick="window.__togTW('incNI')">
-      <button class="toggle on" id="tw-tog-incNI"></button>
-      <span class="toggle-text">Include NI in tax totals</span>
-    </div>
-    <div class="toggle-row" onclick="window.__togTW('compare')">
-      <button class="toggle" id="tw-tog-compare"></button>
-      <span class="toggle-text">Chart: compare selected split vs 50/50</span>
-    </div>
-    <div class="toggle-row" onclick="window.__togTW('rebal')">
-      <button class="toggle" id="tw-tog-rebal"></button>
-      <span class="toggle-text">Rebalance £150k debt residential → rental</span>
-    </div>
-  </div>
-</div>
-
-<!-- ── EDITMODE DEFAULTS ─────────────────────────────────────── -->
-<script>
-  const TWEAKS = /*EDITMODE-BEGIN*/{
-    "wageGrowth": 0,
-    "rateNext": 4,
-    "incNI": true,
-    "compare": false,
-    "rebal": false,
-    "taxYear": "2026\/27"
-  }/*EDITMODE-END*/;
-</script>
 
 <script>
 /* ── BTL Modeller — calculations & rendering ─────────────────── */
@@ -969,7 +928,9 @@ const TAX_YEARS = {
   "2027/28": { PA: 12570, BASIC: 50270, HIGHER: 125140, NI_PT: 12570, NI_UEL: 50270, NI_MAIN: 0.08, NI_UPPER: 0.02, CGT_BASIC: 0.18, CGT_HIGHER: 0.24, CGT_ALLOW: 3000 }
 };
 
-let currentYear = TWEAKS.taxYear;
+let currentYear = '2026/27';
+let incNI   = true;
+let compare = false;
 let projHorizon = 10;
 let chartResults = null, chartOpt = null, chartProj = null;
 
@@ -1081,7 +1042,8 @@ function getInputs() {
     saleDate: $('in-saleDate').value,
     propGrowth: +$('sl-propGrowth').value,
     rentGrowth: +$('sl-rentGrowth').value,
-    inflation: +$('sl-inflation').value
+    inflation:  +$('sl-inflation').value,
+    wageGrowth: +$('sl-wageGrowth').value
   };
 }
 
@@ -1093,12 +1055,15 @@ const PERSIST_IDS = [
   'sl-mortRate','sl-baseCost','sl-saleCost','sl-capImp',
   'num-mortRate',
   'in-purchDate','in-rentStart','in-saleDate',
-  'sl-propGrowth','sl-rentGrowth','sl-inflation'
+  'sl-propGrowth','sl-rentGrowth','sl-inflation','sl-wageGrowth'
 ];
 function saveInputs() {
   try {
     const snap = {};
     PERSIST_IDS.forEach(id => { const el = $(id); if (el) snap[id] = el.value; });
+    snap['__taxYear'] = currentYear;
+    snap['__incNI']   = incNI;
+    snap['__compare'] = compare;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snap));
   } catch (e) {}
 }
@@ -1111,6 +1076,9 @@ function restoreInputs() {
       const el = $(id);
       if (el && snap[id] !== undefined) el.value = snap[id];
     });
+    if (snap['__taxYear']) currentYear = snap['__taxYear'];
+    if (snap['__incNI']   !== undefined) incNI   = snap['__incNI'];
+    if (snap['__compare'] !== undefined) compare = snap['__compare'];
   } catch (e) {}
 }
 function resetInputs() {
@@ -1124,11 +1092,6 @@ function update() {
   saveInputs();
   const i = getInputs();
   const y = TAX_YEARS[currentYear];
-
-  // Apply rebalancing tweak (adds £150k × rateNext interest to rental)
-  if (TWEAKS.rebal) {
-    i.mintR += 150000 * (TWEAKS.rateNext / 100);
-  }
 
   // Labels
   $('lbl-husbandIncome').textContent = fmt(i.husbandIncome);
@@ -1145,9 +1108,10 @@ function update() {
   $('lbl-baseCost').textContent = fmt(i.baseCost);
   $('lbl-saleCost').textContent = fmt(i.saleCost);
   $('lbl-capImp').textContent = fmt(i.capImp);
-  $('lbl-propGrowth').textContent = i.propGrowth.toFixed(1) + '%';
-  $('lbl-rentGrowth').textContent = i.rentGrowth.toFixed(1) + '%';
-  $('lbl-inflation').textContent = i.inflation.toFixed(1) + '%';
+  $('lbl-propGrowth').textContent  = i.propGrowth.toFixed(1) + '%';
+  $('lbl-rentGrowth').textContent  = i.rentGrowth.toFixed(1) + '%';
+  $('lbl-inflation').textContent   = i.inflation.toFixed(1) + '%';
+  $('lbl-wageGrowth').textContent  = i.wageGrowth.toFixed(1) + '%';
 
   // CGT date labels
   const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
@@ -1176,9 +1140,9 @@ function update() {
   // ── Hero ──
   $('h-net').textContent = fmt(scen.householdNet);
   $('h-net-sub').textContent = `H ${fmtK(scen.husbandNet)} · W ${fmtK(scen.wifeNet)}`;
-  const taxTotal = TWEAKS.incNI ? scen.household : (scen.husbandTax + scen.wifeTax);
+  const taxTotal = incNI ? scen.household : (scen.husbandTax + scen.wifeTax);
   $('h-tax').textContent = fmt(taxTotal);
-  $('h-tax-sub').textContent = TWEAKS.incNI ? `Income tax + NI` : `Income tax only`;
+  $('h-tax-sub').textContent = incNI ? `Income tax + NI` : `Income tax only`;
   $('h-save').textContent = (saving >= 0 ? '+' : '') + fmt(saving);
   $('h-save').className = 'hero-val ' + (saving >= 0 ? 'pos' : 'neg');
   $('h-save-sub').textContent = saving > 0 ? `${hPct}/${wPct} vs 50/50` : 'No advantage';
@@ -1201,10 +1165,6 @@ function update() {
   const benTotal = i.husbandIncome + scen.rentH + i.savingsH;
   if (benTotal > 90000) {
     flags += `<div class="flag bad"><b>Husband approaching higher-rate band</b> (${fmt(benTotal)}). Diminishing returns from further shift of ownership.</div>`;
-  }
-  if (TWEAKS.rebal) {
-    const addInt = 150000 * (TWEAKS.rateNext / 100);
-    flags += `<div class="flag info"><b>Rebalancing active</b> — rental interest increased by ${fmt(addInt)}/yr. Section 24 credit pool rises accordingly.</div>`;
   }
   $('flags-area').innerHTML = flags;
 
@@ -1233,7 +1193,7 @@ function renderResultsChart(scen, base, hPct, wPct) {
   if (chartResults) chartResults.destroy();
 
   let labels, datasets;
-  if (TWEAKS.compare) {
+  if (compare) {
     labels = ['50/50 baseline', `${hPct}/${wPct} selected`];
     datasets = [
       { label: 'Husband tax + NI', data: [base.husbandTax, scen.husbandTax], backgroundColor: '#c08a3e', stack: 's' },
@@ -1350,7 +1310,7 @@ function renderProjection(i, y) {
   const N = projHorizon;
   const pg  = i.propGrowth / 100;
   const rg  = i.rentGrowth / 100;
-  const wg  = TWEAKS.wageGrowth / 100;
+  const wg  = i.wageGrowth / 100;
   const inf = i.inflation / 100;
 
   const labels = [];
@@ -1385,7 +1345,7 @@ function renderProjection(i, y) {
 
     const rentT   = i.rent   * Math.pow(1 + rg, t);
     const costsT  = i.costs  * Math.pow(1 + rg, t);
-    const mintT   = mortT    * (TWEAKS.rateNext / 100);
+    const mintT   = i.mintR;
     const salaryT = i.salary * Math.pow(1 + wg, t);
     const inpT = { ...i, rent: rentT, costs: costsT, mintR: mintT, salary: salaryT };
     const s = calcScenario(inpT, i.shareH, y);
@@ -1720,8 +1680,6 @@ document.querySelectorAll('.pill[data-tyear]').forEach(p => {
     document.querySelectorAll('.pill[data-tyear]').forEach(x => x.classList.remove('active'));
     p.classList.add('active');
     currentYear = p.dataset.tyear;
-    TWEAKS.taxYear = currentYear;
-    persist();
     update();
   });
 });
@@ -1737,73 +1695,27 @@ document.querySelectorAll('.tab').forEach(t => {
   });
 });
 
-// ── Tweaks panel ─────────────────────────────────────────────
-function persist() {
-  try { localStorage.setItem('btl_tweaks', JSON.stringify(TWEAKS)); } catch (e) {}
-  window.parent.postMessage({ type: '__edit_mode_set_keys', edits: TWEAKS }, '*');
-}
-
-window.__togTW = (key) => {
-  TWEAKS[key] = !TWEAKS[key];
-  $('tw-tog-' + key).classList.toggle('on', TWEAKS[key]);
-  persist();
+// ── Display toggles (Inc. NI / Compare) ──────────────────────
+$('tog-incNI').addEventListener('click', () => {
+  incNI = !incNI;
+  $('tog-incNI').classList.toggle('active', incNI);
   update();
-};
-
-['wageGrowth', 'rateNext'].forEach(k => {
-  const el = $('tw-' + k);
-  el.value = TWEAKS[k];
-  const lbl = $('lbl-tw-' + k);
-  const upd = () => {
-    TWEAKS[k] = +el.value;
-    lbl.textContent = TWEAKS[k].toFixed(1) + '%';
-    persist();
-    update();
-  };
-  el.addEventListener('input', upd);
-  lbl.textContent = TWEAKS[k].toFixed(1) + '%';
 });
-
-// Initialise toggle visual states
-['incNI', 'compare', 'rebal'].forEach(k => {
-  $('tw-tog-' + k).classList.toggle('on', TWEAKS[k]);
+$('tog-compare').addEventListener('click', () => {
+  compare = !compare;
+  $('tog-compare').classList.toggle('active', compare);
+  update();
 });
-
-// Active tax-year pill
-document.querySelectorAll('.pill[data-tyear]').forEach(p => {
-  p.classList.toggle('active', p.dataset.tyear === TWEAKS.taxYear);
-});
-
-// Tweaks host contract
-window.__toggleTweaks = (on) => {
-  $('tweaks-panel').classList.toggle('open', on);
-};
-window.addEventListener('message', e => {
-  if (!e.data) return;
-  if (e.data.type === '__activate_edit_mode') window.__toggleTweaks(true);
-  if (e.data.type === '__deactivate_edit_mode') window.__toggleTweaks(false);
-});
-window.parent.postMessage({ type: '__edit_mode_available' }, '*');
-
-// Restore from localStorage
-try {
-  const stored = JSON.parse(localStorage.getItem('btl_tweaks') || '{}');
-  Object.assign(TWEAKS, stored);
-  currentYear = TWEAKS.taxYear;
-  ['wageGrowth', 'rateNext'].forEach(k => {
-    $('tw-' + k).value = TWEAKS[k];
-    $('lbl-tw-' + k).textContent = (+TWEAKS[k]).toFixed(1) + '%';
-  });
-  ['incNI', 'compare', 'rebal'].forEach(k => {
-    $('tw-tog-' + k).classList.toggle('on', TWEAKS[k]);
-  });
-  document.querySelectorAll('.pill[data-tyear]').forEach(p => {
-    p.classList.toggle('active', p.dataset.tyear === TWEAKS.taxYear);
-  });
-} catch (e) {}
 
 // GO
 restoreInputs();
+// Sync visual state of pills/toggles from restored values
+document.querySelectorAll('.pill[data-tyear]').forEach(p => {
+  p.classList.toggle('active', p.dataset.tyear === currentYear);
+});
+$('tog-incNI').classList.toggle('active', incNI);
+$('tog-compare').classList.toggle('active', compare);
+
 const resetLink = $('reset-link');
 if (resetLink) {
   resetLink.addEventListener('click', (e) => {
