@@ -679,7 +679,12 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="field">
         <div class="field-head"><span class="field-label">Original purchase cost (base cost)</span><span class="field-value" id="lbl-baseCost">£800,000</span></div>
-        <input type="range" id="sl-baseCost" min="50000" max="3000000" step="10000" value="800000">
+        <input type="range" id="sl-baseCost" min="50000" max="3000000" step="5000" value="800000">
+      </div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-label">Property growth rate</span><span class="field-value" id="lbl-propGrowth">0.5%</span></div>
+        <input type="range" id="sl-propGrowth" min="0" max="10" step="0.1" value="0.5">
       </div>
     </div>
 
@@ -719,6 +724,21 @@ input[type="range"]::-moz-range-thumb {
       <div class="field">
         <div class="field-head"><span class="field-label">Mortgage interest paid</span><span class="field-value" id="lbl-mintR">£9,900</span></div>
         <input type="range" id="sl-mintR" min="0" max="50000" step="100" value="9900">
+      </div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-label">Rental growth rate</span><span class="field-value" id="lbl-rentGrowth">0.0%</span></div>
+        <input type="range" id="sl-rentGrowth" min="0" max="10" step="0.1" value="0">
+      </div>
+    </div>
+
+    <!-- Economy -->
+    <div class="group">
+      <div class="group-label">Economy</div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-label">Inflation (CPI)</span><span class="field-value" id="lbl-inflation">2.9%</span></div>
+        <input type="range" id="sl-inflation" min="0" max="10" step="0.1" value="2.9">
       </div>
     </div>
 
@@ -901,14 +921,6 @@ input[type="range"]::-moz-range-thumb {
     <div class="group-label">Growth assumptions</div>
 
     <div class="field">
-      <div class="field-head"><span class="field-label">Property growth %/yr</span><span class="field-value" id="lbl-tw-propGrowth">3.0%</span></div>
-      <input type="range" id="tw-propGrowth" min="-2" max="8" step="0.5" value="3">
-    </div>
-    <div class="field">
-      <div class="field-head"><span class="field-label">Rent growth %/yr</span><span class="field-value" id="lbl-tw-rentGrowth">3.5%</span></div>
-      <input type="range" id="tw-rentGrowth" min="0" max="8" step="0.5" value="3.5">
-    </div>
-    <div class="field">
       <div class="field-head"><span class="field-label">Wage inflation %/yr</span><span class="field-value" id="lbl-tw-wageGrowth">2.5%</span></div>
       <input type="range" id="tw-wageGrowth" min="0" max="8" step="0.5" value="2.5">
     </div>
@@ -938,8 +950,6 @@ input[type="range"]::-moz-range-thumb {
 <!-- ── EDITMODE DEFAULTS ─────────────────────────────────────── -->
 <script>
   const TWEAKS = /*EDITMODE-BEGIN*/{
-    "propGrowth": 0.5,
-    "rentGrowth": 0,
     "wageGrowth": 0,
     "rateNext": 4,
     "incNI": true,
@@ -1068,7 +1078,10 @@ function getInputs() {
     capImp: +$('sl-capImp').value,
     purchDate: $('in-purchDate').value,
     rentStart: $('in-rentStart').value,
-    saleDate: $('in-saleDate').value
+    saleDate: $('in-saleDate').value,
+    propGrowth: +$('sl-propGrowth').value,
+    rentGrowth: +$('sl-rentGrowth').value,
+    inflation: +$('sl-inflation').value
   };
 }
 
@@ -1079,7 +1092,8 @@ const PERSIST_IDS = [
   'sl-salary','sl-pensionW','sl-savingsW','sl-share','sl-propValue','sl-propMortgage',
   'sl-mortRate','sl-baseCost','sl-saleCost','sl-capImp',
   'num-mortRate',
-  'in-purchDate','in-rentStart','in-saleDate'
+  'in-purchDate','in-rentStart','in-saleDate',
+  'sl-propGrowth','sl-rentGrowth','sl-inflation'
 ];
 function saveInputs() {
   try {
@@ -1131,6 +1145,9 @@ function update() {
   $('lbl-baseCost').textContent = fmt(i.baseCost);
   $('lbl-saleCost').textContent = fmt(i.saleCost);
   $('lbl-capImp').textContent = fmt(i.capImp);
+  $('lbl-propGrowth').textContent = i.propGrowth.toFixed(1) + '%';
+  $('lbl-rentGrowth').textContent = i.rentGrowth.toFixed(1) + '%';
+  $('lbl-inflation').textContent = i.inflation.toFixed(1) + '%';
 
   // CGT date labels
   const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
@@ -1331,18 +1348,22 @@ function renderPnL(i, scen, y) {
 // ── Projection ───────────────────────────────────────────────
 function renderProjection(i, y) {
   const N = projHorizon;
-  const pg = TWEAKS.propGrowth / 100;
-  const rg = TWEAKS.rentGrowth / 100;
-  const wg = TWEAKS.wageGrowth / 100;
+  const pg  = i.propGrowth / 100;
+  const rg  = i.rentGrowth / 100;
+  const wg  = TWEAKS.wageGrowth / 100;
+  const inf = i.inflation / 100;
 
   const labels = [];
   const equity = [];
+  const realEquity = [];   // equity deflated by CPI — purchasing power in today's £s
   const cashYr = [];
   const taxYr = [];
   const cgtArr = [];
   let cumNet = 0;
+  let cumNetReal = 0;
   let cumTax = 0;
   const cumNetArr = [];
+  const cumNetRealArr = [];
   const cumTaxArr = [];
 
   const today = new Date();
@@ -1350,35 +1371,33 @@ function renderProjection(i, y) {
   for (let t = 0; t <= N; t++) {
     labels.push('Y' + t);
     const valT = i.propValue * Math.pow(1 + pg, t);
-    // Interest-only assumption: mortgage balance stays flat (user hasn't specified paydown).
     const mortT = i.propMortgage;
+    const inflFactor = Math.pow(1 + inf, t);
 
-    // Hypothetical CGT if sold at year t: saleDate rolls forward t years from today,
-    // propValue grows, letting period grows → PRR fraction dilutes.
     const hypoSaleDate = new Date(today.getFullYear() + t, today.getMonth(), today.getDate());
     const cgtInputs = { ...i, propValue: valT, saleDate: hypoSaleDate.toISOString().slice(0, 10) };
     const cgtT = calcCGT(cgtInputs, i.shareH, y);
     cgtArr.push(Math.round(cgtT.cgtTotal));
 
-    // Equity = value − outstanding mortgage − latent CGT on sale today at this value.
     const eqT = valT - mortT - cgtT.cgtTotal;
     equity.push(Math.round(eqT));
+    realEquity.push(Math.round(eqT / inflFactor));
 
-    // Year t cashflow
-    const rentT = i.rent * Math.pow(1 + rg, t);
-    const costsT = i.costs * Math.pow(1 + rg, t);
-    const mintT = mortT * (TWEAKS.rateNext / 100);
+    const rentT   = i.rent   * Math.pow(1 + rg, t);
+    const costsT  = i.costs  * Math.pow(1 + rg, t);
+    const mintT   = mortT    * (TWEAKS.rateNext / 100);
     const salaryT = i.salary * Math.pow(1 + wg, t);
     const inpT = { ...i, rent: rentT, costs: costsT, mintR: mintT, salary: salaryT };
     const s = calcScenario(inpT, i.shareH, y);
 
-    const propCash = (rentT - costsT) - mintT;
-    cashYr.push(Math.round(propCash));
+    cashYr.push(Math.round((rentT - costsT) - mintT));
     taxYr.push(Math.round(s.household));
 
-    cumNet += s.householdNet;
-    cumTax += s.household;
+    cumNet     += s.householdNet;
+    cumNetReal += s.householdNet / inflFactor;
+    cumTax     += s.household;
     cumNetArr.push(Math.round(cumNet));
+    cumNetRealArr.push(Math.round(cumNetReal));
     cumTaxArr.push(Math.round(cumTax));
   }
 
@@ -1388,10 +1407,11 @@ function renderProjection(i, y) {
     data: {
       labels,
       datasets: [
-        { label: 'Property equity', data: equity, borderColor: '#2d5d48', backgroundColor: 'rgba(45,93,72,0.10)', fill: true, tension: 0.15, pointRadius: 2, yAxisID: 'y' },
-        { label: 'Latent CGT if sold', data: cgtArr, borderColor: '#5b3a7a', backgroundColor: 'transparent', borderDash: [5, 4], tension: 0.15, pointRadius: 2, yAxisID: 'y' },
-        { label: 'Annual property cashflow', data: cashYr, borderColor: '#c08a3e', backgroundColor: 'transparent', borderDash: [4, 3], tension: 0.15, pointRadius: 2, yAxisID: 'y1' },
-        { label: 'Annual household tax + NI', data: taxYr, borderColor: '#8a3a2a', backgroundColor: 'transparent', borderDash: [2, 2], tension: 0.15, pointRadius: 2, yAxisID: 'y1' }
+        { label: 'Property equity (nominal)',      data: equity,     borderColor: '#2d5d48', backgroundColor: 'rgba(45,93,72,0.10)', fill: true, tension: 0.15, pointRadius: 2, yAxisID: 'y' },
+        { label: 'Real equity (today\'s £s)',       data: realEquity, borderColor: '#7aaa90', backgroundColor: 'transparent', borderDash: [6, 3], tension: 0.15, pointRadius: 2, yAxisID: 'y' },
+        { label: 'Latent CGT if sold',             data: cgtArr,     borderColor: '#5b3a7a', backgroundColor: 'transparent', borderDash: [5, 4], tension: 0.15, pointRadius: 2, yAxisID: 'y' },
+        { label: 'Annual property cashflow',       data: cashYr,     borderColor: '#c08a3e', backgroundColor: 'transparent', borderDash: [4, 3], tension: 0.15, pointRadius: 2, yAxisID: 'y1' },
+        { label: 'Annual household tax + NI',      data: taxYr,      borderColor: '#8a3a2a', backgroundColor: 'transparent', borderDash: [2, 2], tension: 0.15, pointRadius: 2, yAxisID: 'y1' }
       ]
     },
     options: {
@@ -1401,31 +1421,40 @@ function renderProjection(i, y) {
       interaction: { intersect: false, mode: 'index' },
       scales: {
         x: { ticks: { color: '#7a746a', font: { family: 'IBM Plex Mono', size: 10 } }, grid: { display: false }, border: { color: '#1a1815' } },
-        y: { position: 'left', ticks: { color: '#2d5d48', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => fmtK(v) }, grid: { color: '#e6dfcd' }, border: { display: false }, title: { display: true, text: 'Equity (left)', color: '#7a746a', font: { family: 'IBM Plex Mono', size: 9 } } },
+        y:  { position: 'left',  ticks: { color: '#2d5d48', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => fmtK(v) }, grid: { color: '#e6dfcd' }, border: { display: false }, title: { display: true, text: 'Equity (left)', color: '#7a746a', font: { family: 'IBM Plex Mono', size: 9 } } },
         y1: { position: 'right', ticks: { color: '#c08a3e', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => fmtK(v) }, grid: { display: false }, border: { display: false }, title: { display: true, text: 'Annual flows (right)', color: '#7a746a', font: { family: 'IBM Plex Mono', size: 9 } } }
       }
     }
   });
 
   $('proj-legend').innerHTML = `
-    <div class="legend-item"><span class="legend-swatch" style="background:#2d5d48;"></span>Property equity (net of mortgage &amp; CGT)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#2d5d48;"></span>Property equity (nominal)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#7aaa90; border:1px dashed #7aaa90;"></span>Real equity (today's £s, CPI-deflated)</div>
     <div class="legend-item"><span class="legend-swatch" style="background:#5b3a7a;"></span>Latent CGT if sold</div>
     <div class="legend-item"><span class="legend-swatch" style="background:#c08a3e;"></span>Annual property cashflow</div>
     <div class="legend-item"><span class="legend-swatch" style="background:#8a3a2a;"></span>Annual household tax + NI</div>
   `;
 
-  $('proj-meta').textContent = `${N}-year horizon · Prop ${TWEAKS.propGrowth}% · Rent ${TWEAKS.rentGrowth}%`;
+  $('proj-meta').textContent = `${N}-year horizon · Prop ${i.propGrowth}% · Rent ${i.rentGrowth}% · CPI ${i.inflation}%`;
+
+  const inflFactorN = Math.pow(1 + inf, N);
+  const inflErosion = cumNetArr[N] - cumNetRealArr[N];
 
   $('proj-cumulative').innerHTML = `
     <table class="bdn">
       <tbody>
-        <tr><td>Property value at Y${N}</td><td>${fmt(i.propValue * Math.pow(1 + TWEAKS.propGrowth/100, N))}</td></tr>
+        <tr><td>Property value at Y${N}</td><td>${fmt(i.propValue * Math.pow(1 + pg, N))}</td></tr>
         <tr><td>Outstanding mortgage</td><td class="neg">${fmt(-i.propMortgage)}</td></tr>
         <tr><td>Latent CGT if sold at Y${N}</td><td class="neg">${fmt(-cgtArr[N])}</td></tr>
-        <tr class="strong"><td>Net equity at Y${N}</td><td class="pos">${fmt(equity[N])}</td></tr>
-        <tr><td>Net equity gained vs today</td><td class="pos">${fmt(equity[N] - equity[0])}</td></tr>
-        <tr class="strong"><td>Cumulative household net income (${N} yrs)</td><td>${fmt(cumNetArr[N])}</td></tr>
+        <tr class="strong"><td>Net equity at Y${N} (nominal)</td><td class="pos">${fmt(equity[N])}</td></tr>
+        <tr><td>Net equity at Y${N} (real, today's £s)</td><td class="pos">${fmt(realEquity[N])}</td></tr>
+        <tr><td>Net equity gained vs today (real)</td><td class="${realEquity[N] - equity[0] >= 0 ? 'pos' : 'neg'}">${fmt(realEquity[N] - equity[0])}</td></tr>
+        <tr class="subhead"><td colspan="2">Cumulative income</td></tr>
+        <tr><td>Cumulative household net income (${N} yrs, nominal)</td><td>${fmt(cumNetArr[N])}</td></tr>
+        <tr><td>Cumulative net income (real, today's £s)</td><td>${fmt(cumNetRealArr[N])}</td></tr>
+        <tr><td>Inflation erosion of income</td><td class="neg">${fmt(-inflErosion)}</td></tr>
         <tr><td>Cumulative tax + NI paid</td><td class="neg">${fmt(cumTaxArr[N])}</td></tr>
+        <tr class="muted"><td>Cumulative inflation factor (×)</td><td>${inflFactorN.toFixed(2)}×</td></tr>
       </tbody>
     </table>
   `;
@@ -1696,7 +1725,7 @@ window.__togTW = (key) => {
   update();
 };
 
-['propGrowth', 'rentGrowth', 'wageGrowth', 'rateNext'].forEach(k => {
+['wageGrowth', 'rateNext'].forEach(k => {
   const el = $('tw-' + k);
   el.value = TWEAKS[k];
   const lbl = $('lbl-tw-' + k);
@@ -1736,7 +1765,7 @@ try {
   const stored = JSON.parse(localStorage.getItem('btl_tweaks') || '{}');
   Object.assign(TWEAKS, stored);
   currentYear = TWEAKS.taxYear;
-  ['propGrowth', 'rentGrowth', 'wageGrowth', 'rateNext'].forEach(k => {
+  ['wageGrowth', 'rateNext'].forEach(k => {
     $('tw-' + k).value = TWEAKS[k];
     $('lbl-tw-' + k).textContent = (+TWEAKS[k]).toFixed(1) + '%';
   });
