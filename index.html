@@ -1408,6 +1408,7 @@ function renderProjection(i, y) {
         <tr><td>Latent CGT if sold at Y${N}</td><td class="neg">${fmt(-cgtArr[N])}</td></tr>
         <tr class="strong"><td>Net equity at Y${N} (nominal)</td><td class="pos">${fmt(equity[N])}</td></tr>
         <tr><td>Net equity at Y${N} (real, today's £s)</td><td class="pos">${fmt(realEquity[N])}</td></tr>
+        <tr><td>Inflation erosion of equity</td><td class="neg">${fmt(-(equity[N] - realEquity[N]))}</td></tr>
         <tr><td>Net equity gained vs today (real)</td><td class="${realEquity[N] - equity[0] >= 0 ? 'pos' : 'neg'}">${fmt(realEquity[N] - equity[0])}</td></tr>
         <tr class="subhead"><td colspan="2">Cumulative income</td></tr>
         <tr><td>Cumulative household net income (${N} yrs, nominal)</td><td>${fmt(cumNetArr[N])}</td></tr>
