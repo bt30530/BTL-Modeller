@@ -602,8 +602,8 @@ input[type="range"]::-moz-range-thumb {
       <div class="group-label">Husband <span class="hint">Primary / basic rate</span></div>
 
       <div class="field">
-        <div class="field-head"><span class="field-label">Employment / other income</span><span class="field-value" id="lbl-husbandIncome">£0</span></div>
-        <input type="range" id="sl-husbandIncome" min="0" max="150000" step="1000" value="0">
+        <div class="field-head"><span class="field-label">Employment / other income</span><span class="field-value" id="lbl-husbandIncome">£20,000</span></div>
+        <input type="range" id="sl-husbandIncome" min="0" max="150000" step="1000" value="20000">
       </div>
 
       <div class="field">
@@ -612,18 +612,18 @@ input[type="range"]::-moz-range-thumb {
       </div>
 
       <div class="field">
-        <div class="field-head"><span class="field-label">Savings interest</span><span class="field-value" id="lbl-savingsH">£1,000</span></div>
-        <input type="range" id="sl-savingsH" min="0" max="15000" step="100" value="1000">
+        <div class="field-head"><span class="field-label">Savings interest</span><span class="field-value" id="lbl-savingsH">£500</span></div>
+        <input type="range" id="sl-savingsH" min="0" max="15000" step="100" value="500">
       </div>
     </div>
 
     <!-- Wife -->
     <div class="group">
-      <div class="group-label">Wife <span class="hint">Higher rate</span></div>
+      <div class="group-label">Wife</div>
 
       <div class="field">
-        <div class="field-head"><span class="field-label">Salary</span><span class="field-value" id="lbl-salary">£130,000</span></div>
-        <input type="range" id="sl-salary" min="30000" max="300000" step="1000" value="130000">
+        <div class="field-head"><span class="field-label">Employment / other income</span><span class="field-value" id="lbl-salary">£20,000</span></div>
+        <input type="range" id="sl-salary" min="0" max="300000" step="1000" value="20000">
       </div>
 
       <div class="field">
@@ -632,8 +632,8 @@ input[type="range"]::-moz-range-thumb {
       </div>
 
       <div class="field">
-        <div class="field-head"><span class="field-label">Savings / other income</span><span class="field-value" id="lbl-savingsW">£0</span></div>
-        <input type="range" id="sl-savingsW" min="0" max="15000" step="100" value="0">
+        <div class="field-head"><span class="field-label">Savings interest</span><span class="field-value" id="lbl-savingsW">£500</span></div>
+        <input type="range" id="sl-savingsW" min="0" max="15000" step="100" value="500">
       </div>
     </div>
 
@@ -647,16 +647,16 @@ input[type="range"]::-moz-range-thumb {
       </div>
       <div class="split-viz">
         <div class="split-bar">
-          <div class="h-side" id="split-h">90%</div>
-          <div class="w-side" id="split-w">10%</div>
+          <div class="h-side" id="split-h">50%</div>
+          <div class="w-side" id="split-w">50%</div>
         </div>
       </div>
-      <input type="range" id="sl-share" min="0" max="100" step="5" value="90">
+      <input type="range" id="sl-share" min="0" max="100" step="5" value="50">
 
       <div class="pill-row" style="margin-top:10px;">
-        <button class="pill" data-share="50">50 / 50</button>
+        <button class="pill active" data-share="50">50 / 50</button>
         <button class="pill" data-share="75">75 / 25</button>
-        <button class="pill active" data-share="90">90 / 10</button>
+        <button class="pill" data-share="90">90 / 10</button>
         <button class="pill" data-share="99">99 / 1</button>
       </div>
     </div>
@@ -678,8 +678,8 @@ input[type="range"]::-moz-range-thumb {
       </div>
 
       <div class="field">
-        <div class="field-head"><span class="field-label">Original purchase cost (base cost)</span><span class="field-value" id="lbl-baseCost">£800,000</span></div>
-        <input type="range" id="sl-baseCost" min="50000" max="3000000" step="5000" value="800000">
+        <div class="field-head"><span class="field-label">Original purchase cost (base cost)</span><span class="field-value" id="lbl-baseCost">£735,000</span></div>
+        <input type="range" id="sl-baseCost" min="50000" max="3000000" step="5000" value="735000">
       </div>
 
       <div class="field">
@@ -700,15 +700,15 @@ input[type="range"]::-moz-range-thumb {
       <div class="field">
         <div class="field-head"><span class="field-label">Interest rate</span></div>
         <div class="inline-num">
-          <input type="range" id="sl-mortRate" min="0" max="8" step="0.01" value="4.5">
-          <input type="number" id="num-mortRate" min="0" max="8" step="0.01" value="4.5" class="num-input">
+          <input type="range" id="sl-mortRate" min="0" max="8" step="0.01" value="1.89">
+          <input type="number" id="num-mortRate" min="0" max="8" step="0.01" value="1.89" class="num-input">
           <span style="font-size:12px; color:var(--ink-3); font-family:var(--mono);">%</span>
         </div>
       </div>
 
       <div class="field">
-        <div class="field-head"><span class="field-label">Annual interest cost</span><span class="field-value" id="lbl-mintR">£9,900</span></div>
-        <input type="range" id="sl-mintR" min="0" max="200000" step="100" value="9900">
+        <div class="field-head"><span class="field-label">Annual interest cost</span><span class="field-value" id="lbl-mintR">£4,158</span></div>
+        <input type="range" id="sl-mintR" min="0" max="200000" step="100" value="4158">
       </div>
     </div>
 
